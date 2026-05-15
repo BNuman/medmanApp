@@ -534,7 +534,7 @@
     <div class="org-name">Medmänniska Sverige</div>
     <h1 id="mainPageTitle">Volontär</h1>
 <img src="logo.png" class="logo">
-    <div class="version">Version D15.0.5 – pickup helper moved to top</div>
+    <div class="version">Version D15.0.6 – shared pickup helper option</div>
   
   <div id="uxTopNav" class="ux-top-nav volunteer-first-nav">
     <button class="ux-selected-pill" id="uxBtnVolunteer" type="button" onclick="showVolunteerView()">Volontär</button>
@@ -822,6 +822,14 @@ const PICKUP_LOCATIONS = [
 ];
 
 
+const MULTI_BOOKABLE_PICKUP_OPTIONS = [
+  "Delta i hämtning – bil eller körkort behövs inte"
+];
+
+function isMultiBookablePickupLocation(loc) {
+  return MULTI_BOOKABLE_PICKUP_OPTIONS.includes(String(loc || '').trim());
+}
+
 let adminSession = JSON.parse(localStorage.getItem(ADMIN_SESSION_KEY) || 'null');
 let eventsCache = [];
 let signupsCache = [];
@@ -1043,7 +1051,7 @@ const QUEUE_I18N = {
     queue_label: 'Digital kö',
     language_label: 'Välj språk',
     page_title: 'Digital kö',
-    page_version: 'Version D15.0.5 – pickup helper moved to top<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer',
+    page_version: 'Version D15.0.6 – shared pickup helper option<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer',
     name_label: 'Ditt namn (valfritt)',
     name_placeholder: 'Skriv ditt namn om du vill',
     join: 'Gå med i kön',
@@ -1083,7 +1091,7 @@ const QUEUE_I18N = {
     queue_label: 'Digital queue',
     language_label: 'Choose language',
     page_title: 'Digital queue',
-    page_version: 'Version D15.0.5 – pickup helper moved to top<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number',
+    page_version: 'Version D15.0.6 – shared pickup helper option<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number',
     name_label: 'Your name (optional)',
     name_placeholder: 'Enter your name if you want',
     join: 'Join the queue',
@@ -1987,13 +1995,14 @@ function renderPublicEvents() {
               Array.isArray(s.selected_locations) &&
               s.selected_locations.includes(loc)
             );
-            const isBooked = !!booking;
+            const isSharedOption = isMultiBookablePickupLocation(loc);
+            const isBooked = !!booking && !isSharedOption;
             const bookedByName = booking && booking.name ? String(booking.name).trim() : '';
             return `
               <label class="pickup-option ${isBooked ? 'booked' : ''}" onclick="event.stopPropagation()">
                 <input type="checkbox" value="${escapeHtml(loc)}" ${isBooked ? 'disabled' : ''} onclick="event.stopPropagation()" onchange="refreshSignupButton()">
                 <span onclick="event.stopPropagation()">
-                  <strong>${escapeHtml(loc)}</strong><br><small>${isBooked ? ('Redan bokat' + (bookedByName ? ' · Bokad av: ' + escapeHtml(bookedByName) : '')) : 'Ledigt'}</small>
+                  <strong>${escapeHtml(loc)}</strong><br><small>${isSharedOption ? 'Flera volontärer kan välja detta' : (isBooked ? ('Redan bokat' + (bookedByName ? ' · Bokad av: ' + escapeHtml(bookedByName) : '')) : 'Ledigt')}</small>
                 </span>
               </label>
             `;
@@ -2032,7 +2041,9 @@ function getBookedPickupLocations(eventId) {
   const booked = new Set();
   signupsCache
     .filter(s => s.event_id === eventId && !s.is_waitlist)
-    .forEach(s => (Array.isArray(s.selected_locations) ? s.selected_locations : []).forEach(loc => booked.add(loc)));
+    .forEach(s => (Array.isArray(s.selected_locations) ? s.selected_locations : []).forEach(loc => {
+      if (!isMultiBookablePickupLocation(loc)) booked.add(loc);
+    }));
   return booked;
 }
 function renderPickupSelector() {
@@ -2050,11 +2061,12 @@ function renderPickupSelector() {
 
   wrap.classList.remove('hidden');
   wrap.innerHTML = '<div class="section-label">Välj var du kan hämta</div>' + allowed.map(loc => {
-    const isBooked = booked.has(loc);
+    const isSharedOption = isMultiBookablePickupLocation(loc);
+    const isBooked = booked.has(loc) && !isSharedOption;
     return `
       <label class="pickup-option ${isBooked ? 'booked' : ''}" onclick="event.stopPropagation()">
         <input type="checkbox" value="${escapeHtml(loc)}" ${isBooked ? 'disabled' : ''} onclick="event.stopPropagation()" onchange="refreshSignupButton()">
-        <span onclick="event.stopPropagation()"><strong>${escapeHtml(loc)}</strong><br><small>${isBooked ? 'Redan bokat' : 'Ledigt'}</small></span>
+        <span onclick="event.stopPropagation()"><strong>${escapeHtml(loc)}</strong><br><small>${isSharedOption ? 'Flera volontärer kan välja detta' : (isBooked ? 'Redan bokat' : 'Ledigt')}</small></span>
       </label>
     `;
   }).join('');
@@ -2067,15 +2079,17 @@ function selectEvent(id) {
 }
 
 function getPickupBookedByOthers(eventId, locations, ownSignupId = null) {
-  return locations.filter(loc =>
-    signupsCache.some(s =>
-      s.event_id === eventId &&
-      s.id !== ownSignupId &&
-      !s.is_waitlist &&
-      Array.isArray(s.selected_locations) &&
-      s.selected_locations.includes(loc)
-    )
-  );
+  return locations
+    .filter(loc => !isMultiBookablePickupLocation(loc))
+    .filter(loc =>
+      signupsCache.some(s =>
+        s.event_id === eventId &&
+        s.id !== ownSignupId &&
+        !s.is_waitlist &&
+        Array.isArray(s.selected_locations) &&
+        s.selected_locations.includes(loc)
+      )
+    );
 }
 
 function getSignupByName(eventId, name) {
@@ -2148,7 +2162,9 @@ async function submitSignup() {
           return;
         }
 
-        const bookedByOthers = newUniqueLocations.filter(loc =>
+        const bookedByOthers = newUniqueLocations
+          .filter(loc => !isMultiBookablePickupLocation(loc))
+          .filter(loc =>
           signupsCache.some(s =>
             s.event_id === ev.id &&
             s.id !== existingSignup.id &&
