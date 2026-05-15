@@ -1,48 +1,2167 @@
-<!-- =========================
-PLACERING I APPEN
-=========================
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Realtime – Digital kö – Medmänniska Sverige – Version B</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin:0; padding:18px 14px 40px; background:#edf6ef; color:#1c2c20; font-family:'Nunito',sans-serif; }
+    .container { max-width:430px; margin:0 auto; }
+    .logo-area { text-align:center; margin-bottom:16px; }
+    .logo-img { width:88px; height:88px; object-fit:contain; display:block; margin:0 auto 8px; }
+    .org-name { font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:#5f9b73; }
+    h1 { margin:10px 0 0; font-size:24px; line-height:1.14; font-weight:900; }
+    .version { margin-top:6px; font-size:12px; color:#7b8d82; font-weight:800; }
+    .card { background:#fff; border-radius:22px; padding:20px 18px; border:1px solid rgba(46,125,79,.08); box-shadow:0 6px 22px rgba(46,125,79,.08); margin-bottom:14px; }
+    .section-label { font-size:11px; font-weight:900; letter-spacing:.14em; text-transform:uppercase; color:#6b7280; margin-bottom:10px; }
+    .input-group { margin-bottom:15px; }
+    input[type=text], input[type=password], input[type=date], select {
+      width:100%; padding:14px 15px; border-radius:14px; border:2px solid #d1e8da; background:#f9fafb;
+      font-size:16px; font-weight:700; outline:none; font-family:'Nunito',sans-serif;
+    }
+    input:focus, select:focus { border-color:#4CAF74; background:#fff; }
+    .submit-btn, .create-btn, .mini-btn, .logout-btn, .reset-btn {
+      font-family:'Nunito',sans-serif; font-weight:900; cursor:pointer; border:none;
+    }
+    .submit-btn, .create-btn {
+      width:100%; padding:15px; border-radius:14px; font-size:18px; color:#fff;
+      background:linear-gradient(135deg,#2E7D4F,#4CAF74); box-shadow:0 4px 14px rgba(46,125,79,.22);
+    }
+    .submit-btn:disabled, .create-btn:disabled { opacity:.5; cursor:not-allowed; box-shadow:none; }
+    .reset-btn {
+      width:100%; padding:12px; border-radius:14px; border:2px solid #d1e8da; background:transparent;
+      color:#6b7280; font-size:14px;
+    }
+    .admin-row { text-align:center; margin:8px 0 14px; }
+    .admin-link { font-size:13px; color:#8d959b; font-weight:800; text-decoration:underline; cursor:pointer; }
+    .status-msg { display:none; margin:10px 0 14px; padding:12px 14px; border-radius:12px; font-size:13px; font-weight:800; line-height:1.5; }
+    .status-msg.show { display:block; }
+    .status-msg.ok { background:#E8F5EE; color:#2E7D4F; border:2px solid #2E7D4F; }
+    .status-msg.err { background:#FDECEA; color:#C0392B; border:2px solid #C0392B; }
+    .event-card, .mgmt-item {
+      border:2px solid #d1e8da; border-radius:16px; background:#f9fafb; padding:14px; margin-bottom:10px;
+    }
+    .event-card { cursor:pointer; }
+    .event-card.selected { background:#E8F5EE; border-color:#2E7D4F; }
+    .pickup-option { border:2px solid #d1e8da; border-radius:16px; background:#f9fafb; padding:12px; margin-bottom:8px; display:flex; gap:10px; align-items:flex-start; }
+    .pickup-option small { color:#6b7280; font-weight:700; }
+    .pickup-option.booked { opacity:.55; background:#f3f4f6; }
+    .event-top, .mgmt-top { display:flex; gap:12px; align-items:flex-start; justify-content:space-between; }
+    .event-emoji { font-size:28px; line-height:1; }
+    .event-title { font-size:18px; font-weight:900; }
+    .event-sub { font-size:13px; color:#6b7280; font-weight:700; margin-top:4px; }
+    .tag { display:inline-block; margin-top:6px; padding:6px 9px; border-radius:999px; background:#E3F0FF; color:#1565C0; font-size:11px; font-weight:900; }
+    .status-line { margin-top:8px; font-size:13px; font-weight:900; color:#2E7D4F; }
+    .status-line.full { color:#C0392B; }
+    .selected-badge { display:inline-block; margin-top:8px; padding:6px 10px; border-radius:999px; background:#E8F5EE; color:#2E7D4F; font-size:11px; font-weight:900; }
 
-Visa checkboxen:
-- På volontärsidan
-- Direkt OVANFÖR knappen:
-  "Jag vill hjälpa till"
+    .empty-state { text-align:center; padding:18px; color:#98A3AB; font-size:14px; font-weight:800; }
+    .admin-panel { display:none; }
+    .admin-panel.show { display:block; }
+    .admin-content { display:none; }
+    .admin-content.show { display:block; }
+    .login-error { display:none; margin-top:10px; color:#C0392B; font-size:13px; font-weight:800; }
+    .login-error.show { display:block; }
+    .admin-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+    .logout-btn { background:#fff; border:2px solid #444; color:#111; border-radius:16px; padding:9px 16px; font-size:14px; }
+    .admin-tabs { display:flex; gap:4px; border-bottom:2px solid #d1e8da; margin-bottom:14px; }
+    .atab { flex:1; background:none; border:none; padding:10px 6px; font-size:13px; font-weight:800; color:#6b7280; border-bottom:3px solid transparent; cursor:pointer; font-family:'Nunito',sans-serif; }
+    .atab.active { color:#2E7D4F; border-bottom-color:#2E7D4F; }
+    .hidden { display:none!important; }
+    .mini-btn { padding:8px 10px; border-radius:12px; font-size:11px; border:2px solid #d1e8da; background:#fff; color:#6b7280; }
+    .mini-btn.active { background:#E8F5EE; color:#2E7D4F; border-color:#2E7D4F; }
+    .mini-btn.delete { background:#FDECEA; color:#C0392B; border-color:#F3C1BA; }
+    .success-msg { display:none; margin-top:10px; font-size:13px; font-weight:900; text-align:center; color:#2E7D4F; }
+    .signup-admin-card { border:2px solid #d1e8da; border-radius:16px; background:#f9fafb; padding:12px; margin-bottom:10px; }
+    .signup-admin-header { display:flex; gap:10px; align-items:flex-start; justify-content:space-between; }
+    .signup-admin-name { font-weight:900; font-size:15px; }
+    .signup-admin-sub { font-size:12px; color:#6b7280; margin-top:3px; font-weight:700; }
+    .pickup-item-row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 10px; border:2px solid #dfe9e2; border-radius:12px; background:#fff; margin-top:8px; }
+    .small-btn { padding:7px 10px; border:none; border-radius:10px; font-size:11px; font-weight:900; font-family:'Nunito',sans-serif; cursor:pointer; }
+    .small-btn.delete { background:#FDECEA; color:#C0392B; }
+    .small-btn.export { background:#E3F0FF; color:#1565C0; }
+    .success-msg.show { display:block; }
+    .confirm-screen { text-align:center; }
+    .confirm-icon { font-size:58px; display:block; margin-bottom:10px; }
+    .confirm-title { font-size:24px; font-weight:900; margin-bottom:8px; }
+    .confirm-msg { font-size:14px; line-height:1.6; color:#6b7280; margin-bottom:14px; }
+    .confirm-badge {
+      display:inline-block; padding:10px 14px; border-radius:12px; border:2px solid #2E7D4F;
+      background:#E8F5EE; color:#2E7D4F; font-size:14px; font-weight:900; margin-bottom:16px;
+    }
+  
+    .queue-status-box,.queue-link-box{border:2px solid #d1e8da;border-radius:16px;background:#f9fafb;padding:14px}
+    .queue-link-box{word-break:break-all;font-size:13px;color:#6b7280}
+    .queue-big-number{font-size:68px;line-height:1;font-weight:900;text-align:center;margin-top:12px;color:#2E7D4F}
+    .queue-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+    .queue-summary-card{border:2px solid #d1e8da;border-radius:14px;background:#f9fafb;padding:12px}
+    .queue-summary-label{font-size:11px;font-weight:900;color:#6b7280;letter-spacing:.08em;text-transform:uppercase}
+    .queue-summary-value{font-size:22px;font-weight:900;margin-top:4px}
+    .queue-row{border:2px solid #d1e8da;border-radius:16px;background:#f9fafb;padding:12px;margin-bottom:10px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .queue-chip{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:900;background:#E3F0FF;color:#1565C0}
+    .queue-chip.assigned{background:#E8F5EE;color:#2E7D4F}
+    .queue-chip.left{background:#FDECEA;color:#C0392B}
+    .queue-create-wrap{border:2px dashed #d1e8da;border-radius:16px;background:#fbfdfb;padding:14px;margin-bottom:14px}
 
-Checkboxen ska visas:
-- Vid Matutdelning
-- Vid Hämtning
+  
+    .helper-box{background:#f3f8f4;border:2px solid #d7eadc;border-radius:16px;padding:12px 14px;margin-bottom:14px;font-size:13px;line-height:1.55;color:#475569;font-weight:700}
+    .helper-title{font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#2E7D4F;margin-bottom:6px}
+    .sticky-cta{position:sticky;bottom:10px;z-index:5}
+    .status-open{color:#2E7D4F}
+    .status-warn{color:#E07B2E}
+    .status-closed{color:#C0392B}
+    .queue-note{margin-top:10px;font-size:12px;color:#64748b;font-weight:700}
 
-Volontären ska INTE kunna skicka in anmälan innan checkboxen är ikryssad.
+  
+    .lang-bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:10px 0 14px}
+    .lang-btn{border:2px solid #d1e8da;background:#fff;border-radius:12px;padding:8px 10px;font-size:22px;line-height:1;cursor:pointer}
+    .lang-btn.active{border-color:#2E7D4F;background:#E8F5EE}
+
+  
+    .current-number-box{border:2px solid #2E7D4F;border-radius:16px;background:#f6fcf7;padding:12px;margin-top:12px}
+    .current-number-value{font-size:32px;font-weight:900;color:#2E7D4F;line-height:1;margin-top:6px}
+    .current-number-sub{font-size:12px;color:#64748b;font-weight:700;margin-top:4px}
+    .current-number-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+  
+    .action-group{margin-top:14px;padding-top:12px;border-top:2px dashed #d7eadc}
+    .action-group:first-of-type{margin-top:10px;padding-top:0;border-top:none}
+    .action-group-title{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#6b7280;margin-bottom:8px}
+    .primary-big-btn{width:100%;padding:16px 14px;border:none;border-radius:14px;background:#2E7D4F;color:#fff;font-size:18px;font-weight:900;font-family:'Nunito',sans-serif;cursor:pointer;box-shadow:0 8px 18px rgba(46,125,79,.18)}
+    .helper-mini{font-size:12px;color:#64748b;font-weight:700;margin-top:8px;line-height:1.45}
+    .secondary-btn{background:#E3F0FF!important;color:#1565C0!important}
+    .danger-soft-btn{background:#f4f5f7!important;color:#6b7280!important;border:2px solid #d9dde3!important}
+
+  
+    .called-number-box{margin-top:12px;padding:14px;border:2px solid #d1e8da;border-radius:16px;background:#f7fbf8}
+    .called-number-title{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#6b7280}
+    .called-number-value{font-size:34px;font-weight:900;line-height:1;color:#2E7D4F;margin-top:6px}
+    .called-number-sub{font-size:13px;font-weight:700;color:#64748b;margin-top:8px;line-height:1.45}
+
+  
+    .ux-top-nav{display:flex;gap:8px;position:sticky;top:0;z-index:50;background:#edf6ef;padding:8px 0 12px;margin-bottom:8px}
+    .ux-top-btn{flex:1;border:none;border-radius:14px;padding:12px 10px;font-size:14px;font-weight:900;font-family:'Nunito',sans-serif;background:#e9eeeb;color:#1f2937;cursor:pointer}
+    .ux-top-btn.active{background:#2E7D4F;color:#fff;box-shadow:0 8px 18px rgba(46,125,79,.18)}
+    .ux-top-sub{font-size:13px;color:#64748b;font-weight:700;margin:-4px 0 14px}
+
+  
+    .turn-banner{display:none;margin:10px 0 14px;padding:16px;border-radius:16px;font-weight:900;line-height:1.4;text-align:center;border:2px solid transparent}
+    .turn-banner.show{display:block}
+    .turn-banner.wait{background:#f5f6f8;color:#475569;border-color:#dbe2ea}
+    .turn-banner.soon{background:#fff7e6;color:#9a6700;border-color:#f2cf75}
+    .turn-banner.now{background:#e8f5ee;color:#1f7a3e;border-color:#2E7D4F;font-size:18px}
+    .current-next-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+    .current-next-box{padding:12px;border-radius:16px;background:#f8faf9;border:2px solid #d7eadc}
+    .current-next-label{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#64748b}
+    .current-next-value{font-size:28px;font-weight:900;line-height:1;color:#2E7D4F;margin-top:8px}
+    .brand-pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#e8f5ee;color:#2E7D4F;font-size:12px;font-weight:900;margin-top:8px}
+
+  
+    .turn-banner.big-public{padding:18px 16px;border-radius:20px;font-size:18px;font-weight:900;line-height:1.45}
+    .turn-banner.big-public.wait{background:#f5f6f8;color:#475569;border:2px solid #dbe2ea}
+    .turn-banner.big-public.soon{background:#fff7e6;color:#9a6700;border:2px solid #f2cf75}
+    .turn-banner.big-public.now{background:#e8f5ee;color:#1f7a3e;border:2px solid #2E7D4F}
+    .called-number-box.public-big{border-radius:20px;padding:18px 16px}
+    .called-number-box.public-big .called-number-value{font-size:46px}
+    .called-number-box.public-big .called-number-sub{font-size:18px;font-weight:900;line-height:1.4}
+
+  
+    .queue-section-title{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#6b7280;margin:6px 0 10px}
+    body.queue-public-mode #uxTopNav,
+    body.queue-public-mode #uxSecondaryNav,
+    body.queue-public-mode #uxTopSub,
+    body.queue-public-mode #currentViewTag{display:none !important;}
+
+  
+    .call-feedback{display:none;margin-top:10px;padding:10px 12px;border-radius:12px;background:#E8F5EE;color:#2E7D4F;border:2px solid #2E7D4F;font-size:14px;font-weight:900;text-align:center}
+    .call-feedback.show{display:block}
+
+  
+    .turn-banner.ahead{background:#eef5ff;color:#1d4ed8;border:2px solid #93c5fd}
+    .turn-banner.nowsoft{background:#e8f5ee;color:#1f7a3e;border:2px solid #2E7D4F;font-size:20px;box-shadow:0 0 0 4px rgba(46,125,79,.10)}
+    .queue-ahead-pill{display:none;margin:8px 0 14px;padding:12px 14px;border-radius:14px;background:#f8fafc;color:#334155;border:2px solid #dbe2ea;font-size:14px;font-weight:900;text-align:center}
+    .queue-ahead-pill.show{display:block}
+
+  
+  /* Volunteer-first UI hierarchy */
+  .volunteer-first-nav{
+    display:flex;
+    justify-content:flex-start;
+    margin: 8px 0 6px;
+    background: transparent;
+    padding: 0;
+    position: static;
+  }
+  .ux-top-btn.ux-top-btn-primary{
+    flex: 0 0 auto;
+    min-width: 142px;
+    padding: 14px 22px;
+    border-radius: 18px;
+    background: #2E7D4F;
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(46,125,79,.18);
+    font-size: 15px;
+  }
+  .ux-top-btn.ux-top-btn-primary.active{
+    background:#2E7D4F;
+    color:#fff;
+  }
+  .ux-secondary-nav{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    justify-content:flex-start;
+    margin: 0 0 10px;
+  }
+  .ux-top-link{
+    border:none;
+    background:transparent;
+    color:#556170;
+    font-family:'Nunito',sans-serif;
+    font-size:15px;
+    font-weight:900;
+    padding:4px 2px;
+    cursor:pointer;
+    text-decoration: none;
+  }
+  .ux-top-link.active{
+    color:#1f2937;
+    text-decoration: underline;
+    text-underline-offset: 5px;
+  }
+  .ux-secondary-sep{
+    color:#94a3b8;
+    font-weight:900;
+    line-height:1;
+  }
+  .ux-top-sub{
+    margin: 4px 0 10px;
+    font-size: 14px;
+    color:#6b7280;
+    font-weight:800;
+  }
+  .current-view-badge{
+    display:inline-block;
+    padding:5px 10px;
+    border-radius:999px;
+    background:#edf7f0;
+    color:#2E7D4F;
+    font-weight:800;
+    font-size:11px;
+    margin:0 0 14px;
+  }
+  .helper-box{
+    padding: 18px 18px 16px;
+  }
+  .helper-box .helper-title{
+    margin-bottom:10px;
+  }
 
 
-=========================
-HTML – LÄGG IN OVANFÖR SIGNUP-KNAPPEN
-========================= -->
+  /* D14.4.3 clean UX */
+  .volunteer-first-nav{
+    display:flex;
+    justify-content:flex-start;
+    margin: 8px 0 8px;
+    background: transparent;
+    padding: 0;
+    position: static;
+  }
+  .ux-selected-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width: 138px;
+    padding: 13px 20px;
+    border-radius: 999px;
+    background:#2E7D4F;
+    color:#fff;
+    font-family:'Nunito',sans-serif;
+    font-size:15px;
+    font-weight:900;
+    letter-spacing:.01em;
+  }
+  .ux-secondary-nav{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    justify-content:flex-start;
+    margin: 0 0 16px;
+  }
+  .ux-top-link{
+    border:none;
+    background:transparent;
+    color:#556170;
+    font-family:'Nunito',sans-serif;
+    font-size:15px;
+    font-weight:900;
+    padding:4px 2px;
+    cursor:pointer;
+    text-decoration:none;
+    border-radius:8px;
+  }
+  .ux-top-link.active{
+    color:#1f2937;
+    text-decoration: underline;
+    text-underline-offset: 5px;
+  }
+  .ux-secondary-sep{
+    color:#94a3b8;
+    font-weight:900;
+    line-height:1;
+  }
+  .ux-top-sub{
+    margin: 2px 0 14px;
+    font-size: 14px;
+    color:#6b7280;
+    font-weight:800;
+  }
+  .current-view-badge{
+    display:inline-block;
+    padding:5px 10px;
+    border-radius:999px;
+    background:#edf7f0;
+    color:#2E7D4F;
+    font-weight:800;
+    font-size:11px;
+    margin:0 0 22px;
+  }
+  .helper-box{
+    padding: 18px 18px 16px;
+    margin-bottom: 18px;
+  }
+  .helper-box .helper-title{
+    margin-bottom:10px;
+  }
+  .input-group{
+    margin-bottom: 18px;
+  }
+  .section-label{
+    margin-bottom: 10px;
+  }
+  .submit-btn{
+    position: static !important;
+    z-index: auto !important;
+    margin-top: 18px;
+  }
 
-<div id="volunteerAgreementWrap" class="agreement-box">
-  <label class="agreement-label">
-    <input type="checkbox" id="volunteerAgreementCheckbox" onchange="refreshSignupButton()">
-    <span>
-      Jag är medveten om att all mat och alla donationer är till för människor i behov.
-      Som volontär ansvarar jag för att donationerna hanteras rättvist, respektfullt
-      och enligt organisationens riktlinjer.
-    </span>
-  </label>
+
+  /* D14.4.4 fix */
+  .volunteer-first-nav{
+    justify-content:center !important;
+    margin: 10px 0 8px !important;
+  }
+  .ux-selected-pill{
+    border:none;
+    cursor:pointer;
+    box-shadow:none;
+  }
+  .ux-secondary-nav{
+    justify-content:center !important;
+    margin: 0 0 16px !important;
+    flex-wrap:wrap;
+  }
+  .ux-top-link{
+    padding:6px 4px;
+  }
+
+
+    .volunteer-queue-overview{display:none;margin:0 0 18px;padding:16px;border:2px solid #d7eadc;border-radius:18px;background:#f8fbf9}
+    .volunteer-queue-overview.show{display:block}
+    .volunteer-queue-overview .vqo-title{font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#64748b;margin:0 0 8px}
+    .volunteer-queue-overview .vqo-name{font-size:14px;font-weight:900;color:#1f2937;margin-bottom:12px}
+    .volunteer-queue-overview .vqo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .volunteer-queue-overview .vqo-card{padding:12px;border-radius:14px;border:2px solid #dbe7df;background:#fff}
+    .volunteer-queue-overview .vqo-card .label{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#64748b}
+    .volunteer-queue-overview .vqo-card .value{font-size:26px;line-height:1;margin-top:8px;font-weight:900;color:#1f2937}
+    .volunteer-queue-overview .vqo-card.current .value{color:#2E7D4F}
+    .volunteer-queue-overview .vqo-note{font-size:12px;color:#64748b;font-weight:700;margin-top:12px;line-height:1.45}
+    .toggle-volunteer-queue-btn{background:#eef8f1!important;color:#2E7D4F!important;border:2px solid #cfe6d5!important}
+    @media (max-width:640px){.volunteer-queue-overview .vqo-grid{grid-template-columns:1fr}}
+
+
+    .volunteer-toggle-box{margin-top:12px;padding:12px;border:2px solid #d7eadc;border-radius:14px;background:#f8fbf9}
+    .volunteer-toggle-title{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#64748b;margin-bottom:8px}
+    .volunteer-toggle-row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .volunteer-toggle-status{font-size:13px;font-weight:900;color:#1f2937}
+
+
+    .volunteer-toggle-btn.visible{
+      background:#E8F5EE !important;
+      color:#2E7D4F !important;
+      border:2px solid #2E7D4F !important;
+    }
+    .volunteer-toggle-btn.hidden-state{
+      background:#E3F0FF !important;
+      color:#1565C0 !important;
+      border:2px solid #c7dcff !important;
+    }
+
+
+.logo {
+  width: 110px;
+  margin: 10px auto 5px;
+  display: block;
+}
+
+:root{
+  --brand-red:#E53935;
+  --brand-red-soft:#FCE9E7;
+  --brand-orange:#FF7043;
+  --brand-text:#1F2937;
+  --brand-muted:#6B7280;
+  --brand-green:#4F8A5B;
+  --brand-green-soft:#EAF5ED;
+}
+
+.logo{
+  width:88px !important;
+  margin:8px auto 10px !important;
+  display:block !important;
+  border-radius:18px;
+  box-shadow:0 8px 24px rgba(0,0,0,.06);
+}
+
+.org-name{
+  color:var(--brand-red) !important;
+  letter-spacing:.14em !important;
+}
+
+.helper-title,
+.vqo-title,
+.queue-summary-title,
+.section-title,
+.current-call-label,
+.confirm-title{
+  color:var(--brand-red) !important;
+}
+
+.submit-btn,
+.ux-selected-pill{
+  background:linear-gradient(135deg,var(--brand-green),#6AA678) !important;
+  box-shadow:0 8px 18px rgba(79,138,91,.18) !important;
+}
+
+.submit-btn:hover,
+.ux-selected-pill:hover{
+  filter:brightness(.98);
+}
+
+.tag,
+.selected-badge{
+  background:var(--brand-red-soft) !important;
+  color:var(--brand-red) !important;
+  border:1px solid rgba(229,57,53,.12);
+}
+
+.status-msg,
+.event-sub,
+.queue-note,
+.vqo-note{
+  color:var(--brand-muted) !important;
+}
+
+.card,
+.helper-box,
+#volunteerQueueOverview,
+.pickup-option,
+.event-card,
+.input-group input,
+#queueCard .input-group,
+#calledNumberBox{
+  border-radius:22px !important;
+}
+
+.logo-area{
+  padding-top:8px !important;
+}
+
+.version{
+  color:#7b8794 !important;
+  margin-top:8px !important;
+  margin-bottom:14px !important;
+}
+
+#uxTopNav{
+  margin-top:6px !important;
+}
+
+#uxSecondaryNav{
+  margin-top:6px !important;
+  margin-bottom:18px !important;
+}
+
+#mainForm{
+  padding-top:6px !important;
+}
+
+.card{
+  box-shadow:0 14px 34px rgba(0,0,0,.05) !important;
+}
+
+.section-label{
+  color:#6B7280 !important;
+}
+
+#queueTurnBanner.show.nowsoft{
+  background:linear-gradient(135deg,var(--brand-red-soft),#FFF3F1) !important;
+  color:var(--brand-red) !important;
+  border-color:rgba(229,57,53,.22) !important;
+}
+
+#queueTurnBanner.show.ahead{
+  background:linear-gradient(135deg,#FFF7E8,#FFF3E0) !important;
+  color:#B45309 !important;
+}
+
+.queue-ahead-pill.show{
+  background:var(--brand-red-soft) !important;
+  color:var(--brand-red) !important;
+  border-color:rgba(229,57,53,.16) !important;
+}
+
+
+.agreement-box{
+  margin:14px 0 4px;
+  background:#fff8f7;
+  border:1px solid rgba(229,57,53,.16);
+  border-radius:18px;
+  padding:14px;
+}
+.agreement-label{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  font-size:14px;
+  line-height:1.5;
+  color:#374151;
+  font-weight:800;
+}
+.agreement-label input{
+  margin-top:4px;
+  transform:scale(1.2);
+  flex:0 0 auto;
+}
+
+</style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="container">
+
+
+  <div class="logo-area">
+    
+    <div class="org-name">Medmänniska Sverige</div>
+    <h1 id="mainPageTitle">Volontär</h1>
+<img src="logo.png" class="logo">
+    <div class="version">Version D15.0.3 – volunteer agreement checkbox</div>
+  
+  <div id="uxTopNav" class="ux-top-nav volunteer-first-nav">
+    <button class="ux-selected-pill" id="uxBtnVolunteer" type="button" onclick="showVolunteerView()">Volontär</button>
+  </div>
+  <div id="uxSecondaryNav" class="ux-secondary-nav" aria-label="Sekundär navigation">
+    <button class="ux-top-link" id="uxBtnAdmin" type="button" onclick="showAdminDashboard()">⚙️ Admin</button>
+    <span class="ux-secondary-sep">•</span>
+    <button class="ux-top-link" id="uxBtnQueue" type="button" onclick="showQueueDashboard()">📋 Köhantering</button>
+  </div>
+  <div id="uxTopSub" class="ux-top-sub">Anmäl dig till matutdelning eller hämtning.</div>
+<div id="currentViewTag" class="current-view-badge">Volontärläge</div>
+
+  <div class="card hidden" id="queueCard">
+    <div class="section-label hidden" id="queueSectionLabel">Digital kö</div>
+    <div class="section-label" id="queueLanguageLabel" style="margin-top:4px;margin-bottom:8px;text-align:center;">Välj språk</div>
+    <div class="lang-bar" id="queueLangBar">
+      <button class="lang-btn active" type="button" data-lang="sv" onclick="setQueueLanguage('sv')" title="Svenska">🇸🇪</button>
+      <button class="lang-btn" type="button" data-lang="en" onclick="setQueueLanguage('en')" title="English">🇬🇧</button>
+      <button class="lang-btn" type="button" data-lang="es" onclick="setQueueLanguage('es')" title="Español">🇪🇸</button>
+      <button class="lang-btn" type="button" data-lang="ar" onclick="setQueueLanguage('ar')" title="العربية">🇸🇦</button>
+      <button class="lang-btn" type="button" data-lang="uk" onclick="setQueueLanguage('uk')" title="Українська">🇺🇦</button>
+    </div>
+    <div class="helper-box" id="queueHelperBox" style="margin-top:2px;">
+      <div class="helper-title" id="queueHelperTitle">Så gör du</div>
+      <div id="queueHelperText">1. Skriv ditt namn om du vill<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer</div>
+    </div>
+    <div class="confirm-title" id="queueTitle" style="font-size:20px;margin-bottom:10px;">Registrering</div>
+    <div class="queue-status-box" style="background:#f3f8f4;">
+      <div id="queueStatusText" style="font-size:14px;line-height:1.6;color:#4b5563;font-weight:700;">Laddar köinformation…</div>
+      <div id="queueBigNumber" class="queue-big-number hidden">0</div>
+    </div>
+    <div class="queue-section-title" id="queueCurrentCallLabel">Aktuellt upprop</div>
+    <div class="called-number-box public-big" id="calledNumberBox" style="display:block;border-color:#2E7D4F;background:#eef8f1;">
+      <div class="called-number-title hidden" id="calledNumberTitle">Aktuellt upprop</div>
+      <div class="called-number-value" id="calledNumberValue">-</div>
+      <div class="called-number-sub" id="calledNumberSub">Inget nummer ropas upp just nu.</div>
+    </div>
+    <div class="input-group" id="queueNameWrap" style="margin-top:14px;">
+      <div class="section-label">Ditt namn (valfritt)</div>
+      <input type="text" id="queueNameInput" placeholder="Skriv ditt namn om du vill" maxlength="50">
+    </div>
+    <div class="queue-note">Du behåller din plats i kön även om du väntar här. Du behöver inte trycka igen.</div>
+    <div class="queue-section-title" id="queueStatusLabel">Din status</div>
+    <div id="queueTurnBanner" class="turn-banner big-public wait"></div>
+    <div id="queueAheadInfo" class="queue-ahead-pill"></div>
+    <div id="queueTurnNotice" class="status-msg" style="font-weight:900;"></div>
+    <div id="queuePublicStatus" class="status-msg"></div>
+    <button class="submit-btn" type="button" id="queueJoinBtn" onclick="joinQueue()">Gå med i kön</button>
+    <button class="submit-btn hidden" type="button" id="queueLeaveBtn" onclick="leaveQueue()" style="margin-top:10px;">Lämna kön</button>
+  </div>
+
+  <div class="card" id="volunteerCard">
+    <div id="mainForm">
+      <div class="helper-box" id="howToBox">
+        <div class="helper-title" id="queueHelperTitle">Så gör du</div>
+        1. Fyll i ditt namn<br>
+        2. Välj aktivitet<br>
+        3. Klicka på knappen längst ner
+      </div>
+
+      <div id="volunteerQueueOverview" class="volunteer-queue-overview">
+        <div class="vqo-title">Köläget just nu</div>
+        <div class="vqo-name" id="volunteerQueueOverviewName">Aktiv kö</div>
+        <div class="vqo-grid">
+          <div class="vqo-card current">
+            <div class="label">Aktuellt nummer</div>
+            <div class="value" id="volunteerQueueOverviewCurrent">-</div>
+          </div>
+          <div class="vqo-card">
+            <div class="label">Utdelade nummer</div>
+            <div class="value" id="volunteerQueueOverviewAssigned">0</div>
+          </div>
+          <div class="vqo-card">
+            <div class="label">Kvar i kön</div>
+            <div class="value" id="volunteerQueueOverviewRemaining">0</div>
+          </div>
+        </div>
+        <div class="vqo-note">Den här rutan visas bara när kövisning för volontärer är aktiverad.</div>
+      </div>
+      <div class="input-group" id="nameInputContainer">
+        <div class="section-label">Ditt namn</div>
+        <input type="text" id="nameInput" placeholder="Skriv ditt fullständiga namn…" maxlength="50" oninput="saveVolunteerName(); refreshSignupButton()">
+      </div>
+      <div id="activitySection">
+      <div class="section-label">Välj aktivitet</div>
+      <div id="eventsList"></div>
+      </div>
+      
+
+      <div id="volunteerAgreementWrap" class="agreement-box hidden">
+        <label class="agreement-label">
+          <input type="checkbox" id="volunteerAgreementCheckbox" onchange="refreshSignupButton()">
+          <span>
+            Jag är medveten om att all mat och alla donationer är till för människor i behov.
+            Som volontär ansvarar jag för att donationerna hanteras rättvist, respektfullt
+            och enligt organisationens riktlinjer.
+          </span>
+        </label>
+      </div>
+
+      <div id="publicStatus" class="status-msg"></div>
+      <div class="sticky-cta" id="joinButtonWrap"><button class="submit-btn" type="button" id="signupBtn" onclick="submitSignup()" disabled>Fyll i namn först</button></div>
+    </div>
+
+    <div class="confirm-screen hidden" id="confirmScreen">
+      <span class="confirm-icon">🎉</span>
+      <div class="confirm-title" id="confirmTitle">Du är anmäld!</div>
+      <div class="confirm-msg" id="confirmMsg">Tack! Din anmälan är nu registrerad.</div>
+      <div class="confirm-badge" id="confirmBadge"></div>
+      <br><br>
+      <button class="reset-btn" type="button" onclick="resetForm()">← Tillbaka</button>
+    </div>
+  </div>
+
+  
+  <div class="admin-row" id="cancelEntryRow"><span class="admin-link" onclick="toggleCancel()">❌ Avanmäl / avboka</span></div>
+
+  <div class="card hidden" id="cancelCard">
+    <div class="section-label">Avanmäl / avboka</div>
+    <div class="input-group">
+      <div class="section-label">Ditt namn</div>
+      <input type="text" id="cancelName" placeholder="Skriv ditt namn exakt som du anmälde dig…" maxlength="50" oninput="renderCancelOptions()">
+    </div>
+    <div class="input-group">
+      <div class="section-label">Välj aktivitet</div>
+      <select id="cancelEventSelect" onchange="renderCancelOptions()">
+        <option value="">— Välj aktivitet —</option>
+      </select>
+    </div>
+    <div id="cancelPickupWrap" class="hidden"></div>
+    <div id="cancelMsg" class="status-msg"></div>
+    <button class="submit-btn" type="button" id="cancelBtn" onclick="doCancel()">Ta bort min anmälan</button>
+  </div>
+
+
+  <div class="admin-row" id="adminEntryRow"><span class="admin-link" onclick="toggleAdmin()">🔐 Admin-inloggning</span></div>
+
+  <div class="card admin-panel" id="adminPanel">
+    <div id="adminLogin">
+      <div class="section-label">Admin e-post</div>
+      <input type="text" id="adminEmailInput" placeholder="admin@dinorg.se">
+      <div class="section-label" style="margin-top:12px;">Adminlösenord</div>
+      <input type="password" id="adminPwInput" placeholder="Ange lösenord…" onkeydown="if(event.key==='Enter') doLogin()">
+      <div class="login-error" id="loginError">❌ Kunde inte logga in.</div>
+      <div class="helper-mini" style="margin-top:10px;">Admin-inloggning hanteras via Supabase Auth. Lägg till fler admins som användare i Supabase.</div>
+      <br><br>
+      <button class="submit-btn" type="button" onclick="doLogin()">Logga in</button>
+    </div>
+
+    <div class="admin-content" id="adminContent">
+      <div class="admin-header">
+        <div style="font-weight:900;">⚙️ Admin</div>
+        <button class="logout-btn" type="button" onclick="doLogout()">Logga ut</button>
+      </div>
+
+      <div class="admin-tabs">
+        <button class="atab active" type="button" id="tabBtn0" onclick="switchTab(0)">➕ Skapa</button>
+        <button class="atab" type="button" id="tabBtn1" onclick="switchTab(1)">📅 Hantera</button>
+        <button class="atab" type="button" id="tabBtn2" onclick="switchTab(2)">📋 Anmälningar</button>
+        <button class="atab" type="button" id="tabBtn3" onclick="switchTab(3)">🎟️ Digital kö</button>
+      </div>
+
+      <div id="tab0">
+        <div class="input-group">
+          <div class="section-label">Typ av aktivitet</div>
+          <select id="newActivityType" onchange="renderCreatePickupOptions()">
+            <option value="utdelning">Matutdelning</option>
+            <option value="hamtning">Hämtning från partner/donatörer</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <div class="section-label">Rubrik</div>
+          <input type="text" id="newDayName" placeholder="t.ex. Torsdag 18 maj eller Hämtning söndag">
+        </div>
+        <div class="input-group">
+          <div class="section-label">Datum</div>
+          <input type="date" id="newDate">
+        </div>
+        <div class="input-group">
+          <div class="section-label">Tid (valfritt)</div>
+          <input type="text" id="newTime" placeholder="t.ex. 17:30 – 19:00">
+        </div>
+        <div class="input-group">
+          <div class="section-label">Plats (valfritt)</div>
+          <input type="text" id="newLocation" placeholder="t.ex. Frölunda torg">
+        </div>
+        <div class="input-group hidden" id="pickupWrap">
+          <div class="section-label">Välj hämtställen</div>
+          <div id="pickupList"></div>
+        </div>
+        <button class="create-btn" type="button" id="createEventBtn" onclick="addEvent()">➕ Skapa aktivitet</button>
+        <div class="success-msg" id="createSuccess">✅ Aktivitet skapad!</div>
+        <div class="status-msg" id="createError"></div>
+      </div>
+
+      <div id="tab1" class="hidden">
+        <div id="mgmtList"></div>
+      </div>
+
+      <div id="tab2" class="hidden">
+        <div class="input-group">
+          <div class="section-label">Välj aktivitet</div>
+          <select id="adminEventSelect" onchange="renderSignupAdminList()"><option value="">— Välj aktivitet —</option></select>
+        </div>
+        <div id="adminSignupList"><div class="empty-state">Ingen aktivitet vald.</div></div>
+      </div>
+
+      <div id="tab3" class="hidden">
+        <div class="queue-create-wrap">
+          <div class="section-label">Skapa digital kö</div>
+          <div class="input-group"><input type="text" id="newQueueTitle" placeholder="t.ex. Torsdag matutdelning"></div>
+          <div class="input-group"><input type="date" id="newQueueDate"></div>
+          <div class="input-group"><input type="text" id="newQueueTime" placeholder="t.ex. 17:55"></div>
+          <div class="input-group"><input type="text" id="newQueueLocation" placeholder="t.ex. Frölunda"></div>
+          <button class="create-btn" type="button" id="createQueueBtn" onclick="createQueueSession()">➕ Skapa digital kö</button>
+          <div class="success-msg" id="createQueueSuccess">✅ Digital kö skapad!</div>
+          <div class="status-msg" id="createQueueError"></div>
+        </div>
+
+        <div class="input-group">
+          <div class="section-label">Välj digital kö</div>
+          <select id="adminQueueSelect" onchange="renderQueueAdminPanel(); startAdminQueuePolling()"><option value="">— Välj kö —</option></select>
+        </div>
+        <div class="queue-status-box" id="queueAdminSummary"><div class="empty-state">Ingen kö vald.</div></div>
+        <div class="current-number-box" id="currentNumberBox">
+          <div class="section-label" style="margin-bottom:4px;">Aktuellt upprop</div>
+          <div class="current-number-value" id="currentNumberDisplay">-</div>
+          <div class="current-next-grid" style="grid-template-columns:1fr;">
+            <div class="current-next-box">
+              <div class="current-next-label">Nästa nummer</div>
+              <div class="current-next-value" id="nextNumberDisplay">-</div>
+            </div>
+          </div>
+          <div id="callNextFeedback" class="call-feedback"></div>
+          <div class="current-number-sub" id="currentNumberSub">Här ser ni vilket nummer ni ropar upp just nu.</div>
+
+          <div class="action-group">
+            <button class="primary-big-btn" type="button" onclick="callNextNumber()">Ropa nästa nummer</button>
+            <div class="helper-mini">Använd denna under pågående matutdelning.</div>
+          </div>
+
+          <div class="action-group">
+            <div class="action-group-title">Manuell justering</div>
+            <div class="current-number-actions">
+              <button class="mini-btn secondary-btn" type="button" onclick="setCurrentQueueNumber()">Sätt aktuellt nummer</button>
+            </div>
+            <div class="helper-mini">Använd om ni börjar mitt i eller behöver rätta numret manuellt.</div>
+          </div>
+
+          <div class="action-group">
+            <div class="action-group-title">Sena ankomster</div>
+            <div class="current-number-actions">
+              <button class="mini-btn secondary-btn" type="button" onclick="assignNumbersToLateConfirm()">Ge nummer till sena</button>
+            </div>
+            <div class="helper-mini">Använd bara när nya personer tillkommit efter att köplatser redan delats ut.</div>
+          </div>
+
+          <div class="action-group">
+            <div class="action-group-title">Återställ</div>
+            <div class="current-number-actions">
+              <button class="mini-btn danger-soft-btn" type="button" onclick="clearCurrentQueueNumber()">Rensa aktuellt nummer</button>
+            </div>
+          </div>
+        </div>
+        <div id="queueLinkWrap" class="hidden" style="margin-top:12px;">
+          <div class="section-label">QR-länk att använda</div>
+          <div class="queue-link-box" id="queueLinkBox"></div>
+        </div>
+        <div class="admin-actions">
+          <button class="mini-btn active" type="button" onclick="openQueue()">Öppna kö</button>
+          <button class="mini-btn delete" type="button" onclick="closeQueue()">Stäng kö</button>
+          <button class="mini-btn" type="button" onclick="assignQueueNumbers()">Slumpa köplatser</button>
+        </div>
+        <div class="admin-actions" style="margin-top:8px;">
+          <button class="mini-btn" type="button" onclick="addManualQueueEntry()">Lägg till utan mobil</button>
+          <button class="mini-btn" type="button" onclick="resetQueueAssignments()">Nollställ köplatser</button>
+          <button class="mini-btn delete" type="button" onclick="clearQueueSession()">Rensa hela kön</button>
+        </div>
+        <div id="queueAdminList" style="margin-top:12px;"><div class="empty-state">Ingen kö vald.</div></div>
+      </div>
+
+    </div>
+  </div>
 </div>
 
+<script>
+const SUPABASE_URL = 'https://azmvdeynrqaldlqsmwkt.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6bXZkZXlucnFhbGRscXNtd2t0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjAxODYsImV4cCI6MjA5MDczNjE4Nn0.GTKzntDmk4bV1bomnzPPr3Xs0IuwqjuoIv7XSvi3F9M';
+const ADMIN_SESSION_KEY = 'hf_admin_session_v3';
+const VOLUNTEER_NAME_KEY = 'hf_volunteer_name_v3';
+const QUEUE_ENTRY_KEY = 'hf_queue_entry_map_v4';
+const PICKUP_LOCATIONS = [
+  "Brogyllen Landala","Hemköp Guldheden","Willys Sten Sturegatan","Willys Heden","Willys Sten Sturegatan och Heden","Willys Majorna",
+  "Dahls Sisjön","Willys Påvelund","Willys Kaverös","Willys Tuve","Willys Hemma Torslanda",
+  "Willys Torslanda","SockerMajas Torslanda","Restaurang Kalimera Torslanda"
+];
 
-<!-- =========================
-UPPDATERA refreshSignupButton()
-========================= -->
+
+let adminSession = JSON.parse(localStorage.getItem(ADMIN_SESSION_KEY) || 'null');
+let eventsCache = [];
+let signupsCache = [];
+let queueSessionsCache = [];
+let queueEntriesCache = [];
+let isCreatingQueue = false;
+let isJoiningQueue = false;
+let queuePollTimer = null;
+let adminQueuePollTimer = null;
+
+function stopAdminQueueAutoRefresh() {
+  if (adminQueuePollTimer) {
+    clearInterval(adminQueuePollTimer);
+    adminQueuePollTimer = null;
+  }
+}
+
+function startAdminQueueAutoRefresh() {
+  stopAdminQueueAutoRefresh();
+  if (isQueueMode()) return;
+
+  adminQueuePollTimer = setInterval(async () => {
+    try {
+      const panel = document.getElementById('adminPanel');
+      const queueSelect = document.getElementById('adminQueueSelect');
+      const queueId = queueSelect?.value || '';
+      const panelVisible = panel && panel.classList.contains('show') && !panel.classList.contains('hidden');
+      if (!panelVisible || !queueId) return;
+
+      await loadQueueSessions();
+      await loadQueueEntries();
+      renderQueueAdminPanel();
+    } catch (e) {
+      console.error('Admin queue auto refresh error', e);
+    }
+  }, 1500);
+}
+let publicQueueLiveTimer = null;
+
+function stopPublicQueueLiveRefresh() {
+  if (publicQueueLiveTimer) {
+    clearInterval(publicQueueLiveTimer);
+    publicQueueLiveTimer = null;
+  }
+}
+
+function startPublicQueueLiveRefresh() {
+  stopPublicQueueLiveRefresh();
+  if (!isQueueMode()) return;
+
+  publicQueueLiveTimer = setInterval(async () => {
+    try {
+      await loadQueueSessions();
+      await loadQueueEntries();
+      renderQueueView();
+forceQueueHelperTextSafe();
+if (typeof applyTranslations==='function'){applyTranslations();}
+    } catch (e) {
+      console.error('Public queue live refresh error', e);
+    }
+  }, 1500);
+}
+let isCreatingEvent = false;
+let selectedEventId = null;
+
+function saveVolunteerName() {
+  const name = document.getElementById('nameInput')?.value?.trim() || '';
+  if (name) localStorage.setItem(VOLUNTEER_NAME_KEY, name);
+}
+function restoreVolunteerName() {
+  const saved = localStorage.getItem(VOLUNTEER_NAME_KEY) || '';
+  const input = document.getElementById('nameInput');
+  if (input && !input.value && saved) input.value = saved;
+}
+
+function getQueueIdFromUrl() {
+  const p = new URLSearchParams(window.location.search);
+  return p.get('queueId');
+}
+function isQueueMode() {
+  const p = new URLSearchParams(window.location.search);
+  return p.get('queue') === '1' || !!p.get('queueId');
+}
+function getQueueMap() {
+  try { return JSON.parse(localStorage.getItem(QUEUE_ENTRY_KEY) || '{}'); } catch(e) { return {}; }
+}
+function setQueueEntry(queueId, entryId) {
+  const map = getQueueMap();
+  map[queueId] = entryId;
+  localStorage.setItem(QUEUE_ENTRY_KEY, JSON.stringify(map));
+}
+function getQueueEntry(queueId) {
+  return getQueueMap()[queueId] || null;
+}
+function removeQueueEntry(queueId) {
+  const map = getQueueMap();
+  delete map[queueId];
+  localStorage.setItem(QUEUE_ENTRY_KEY, JSON.stringify(map));
+}
+
+function getCurrentQueueNumber(queueId) {
+  if (!queueId) return '';
+  const session = queueSessionsCache.find(q => q.id === queueId);
+  return session?.current_called_number != null ? String(session.current_called_number) : '';
+}
+
+function getNextQueueNumber(queueId) {
+  const rows = getQueueEntriesForSession(queueId)
+    .filter(r => r.status === 'assigned' && r.queue_number != null)
+    .slice()
+    .sort((a, b) => Number(a.queue_number) - Number(b.queue_number));
+
+  if (!rows.length) return '';
+  const current = getCurrentQueueNumber(queueId);
+  if (!current) return String(rows[0].queue_number);
+  const bigger = rows.find(r => Number(r.queue_number) > Number(current));
+  return bigger ? String(bigger.queue_number) : '';
+}
+
+function updateAdminCurrentNext(queueId) {
+  const current = getCurrentQueueNumber(queueId) || '-';
+  const next = getNextQueueNumber(queueId) || '-';
+  const currentDisplay = document.getElementById('currentNumberDisplay');
+  const nextDisplay = document.getElementById('nextNumberDisplay');
+  if (currentDisplay) currentDisplay.textContent = current;
+  if (nextDisplay) nextDisplay.textContent = next;
+}
+
+let callNextButtonLock = false;
+
+function showCallNextFeedback(text) {
+  const el = document.getElementById('callNextFeedback');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.add('show');
+  setTimeout(() => {
+    el.classList.remove('show');
+    el.textContent = '';
+  }, 1800);
+}
+
+function vibrateShort() {
+  try {
+    if (navigator.vibrate) navigator.vibrate(120);
+  } catch (e) {}
+}
+
+
+async function setCurrentQueueNumber() {
+  const queueId = document.getElementById('adminQueueSelect')?.value;
+  if (!queueId) { alert('Välj en kö först.'); return; }
+  const current = getCurrentQueueNumber(queueId);
+  const num = prompt('Vilket nummer ropar ni upp just nu?', current || '');
+  if (num === null) return;
+  const clean = String(num).trim();
+  if (clean && !/^\d+$/.test(clean)) {
+    alert('Ange bara ett nummer.');
+    return;
+  }
+  try {
+    await api('/rest/v1/queue_sessions?id=eq.' + encodeURIComponent(queueId), {
+      method: 'PATCH',
+      headers: getHeaders(true, 'return=minimal'),
+      body: JSON.stringify({ current_called_number: clean ? Number(clean) : null })
+    });
+    await reloadAll();
+    renderQueueAdminPanel();
+  } catch (err) {
+    alert('Kunde inte sätta aktuellt nummer: ' + err.message);
+  }
+}
+async function clearCurrentQueueNumber() {
+  const queueId = document.getElementById('adminQueueSelect')?.value;
+  if (!queueId) { alert('Välj en kö först.'); return; }
+
+  if (!confirm('Är du säker? Detta tar bort aktuellt upprop.')) return;
+
+  try {
+    await api('/rest/v1/queue_sessions?id=eq.' + encodeURIComponent(queueId), {
+      method: 'PATCH',
+      headers: getHeaders(true, 'return=minimal'),
+      body: JSON.stringify({ current_called_number: null })
+    });
+    await reloadAll();
+    renderQueueAdminPanel();
+  } catch (err) {
+    alert('Kunde inte rensa aktuellt nummer: ' + err.message);
+  }
+}
+function getQueueLink(queueId) {
+  return window.location.origin + window.location.pathname + '?queue=1&queueId=' + encodeURIComponent(queueId);
+}
+function stopQueuePolling() {
+  if (queuePollTimer) {
+    clearInterval(queuePollTimer);
+    queuePollTimer = null;
+  }
+  stopPublicQueueLiveRefresh();
+}
+function startQueuePolling() {
+  startPublicQueueLiveRefresh();
+}
+
+function stopAdminQueuePolling() {
+  stopAdminQueueAutoRefresh();
+}
+function startAdminQueuePolling() {
+  startAdminQueueAutoRefresh();
+}
+
+
+
+
+const QUEUE_LANG_KEY = 'hf_queue_lang_v1';
+let currentQueueLang = localStorage.getItem(QUEUE_LANG_KEY) || 'sv';
+
+const QUEUE_I18N = {
+  sv: {
+    queue_label: 'Digital kö',
+    language_label: 'Välj språk',
+    page_title: 'Digital kö',
+    page_version: 'Version D15.0.3 – volunteer agreement checkbox<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer',
+    name_label: 'Ditt namn (valfritt)',
+    name_placeholder: 'Skriv ditt namn om du vill',
+    join: 'Gå med i kön',
+    queue_soon: 'Kön öppnar snart',
+    leave: 'Lämna kön',
+    not_found: 'Kön kunde inte hittas.',
+    no_open_title: 'Ingen öppen kö just nu',
+    no_open_text: 'Vänta tills personalen öppnar kön. När kön är öppen kan du använda samma QR-kod igen.',
+    no_open_status: 'Det finns ingen öppen kö just nu.',
+    wait_msg: 'Tryck på knappen nedan för att gå med i kön.',
+    closed_msg: 'Kön är stängd just nu. Registrering öppnar när personalen öppnar kön.',
+    already_title: 'Du står i kön',
+    already_text: 'Du står i kön nu. Vi ger dig ett nummer snart. Du behöver inte trycka igen.',
+    got_number_title: 'Du har fått ett könummer',
+    got_number_text: 'Du har redan fått ditt könummer. Matutdelningen börjar snart och vi kommer ropa upp ditt nummer, så håll koll och vänta på din tur.',
+    left_title: 'Du har lämnat kön',
+    left_text: 'Du står inte längre i kön. Om du behöver en ny plats kan personalen hjälpa dig.',
+    waiting_status: 'Du är registrerad i kön. Vi ger dig ett nummer snart.',
+    queue_number: 'Ditt könummer',
+    left_status: 'Du har lämnat kön.',
+    note: 'Du behåller din plats i kön även om du väntar här. Du behöver inte trycka igen.',
+    food_distribution: 'Matutdelning',
+    pickup: 'Hämtning',
+    current_call_section: 'Aktuellt upprop',
+    status_section: 'Din status',
+    current_call_title: 'Aktuellt upprop',
+    current_call_none: 'Inget nummer ropas upp just nu.',
+    current_call_prefix: 'Vi ropar upp nummer',
+    turn_now_banner_sub: 'Gå fram till utdelningen',
+    turn_soon_banner_sub: 'Gör dig redo, det är snart din tur',
+    ahead_prefix: 'Personer före dig:',
+    turn_now_banner: 'Nu är det din tur',
+    turn_soon_banner: 'Det är snart din tur',
+    turn_wait_banner: 'Du står i kön och väntar på ditt nummer.'
+  },
+  en: {
+    queue_label: 'Digital queue',
+    language_label: 'Choose language',
+    page_title: 'Digital queue',
+    page_version: 'Version D15.0.3 – volunteer agreement checkbox<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number',
+    name_label: 'Your name (optional)',
+    name_placeholder: 'Enter your name if you want',
+    join: 'Join the queue',
+    queue_soon: 'Queue opens soon',
+    leave: 'Leave the queue',
+    not_found: 'The queue could not be found.',
+    no_open_title: 'No open queue right now',
+    no_open_text: 'Please wait until the staff opens the queue. When the queue is open, you can use the same QR code again.',
+    no_open_status: 'There is no open queue right now.',
+    wait_msg: 'Press the button below to join the queue.',
+    closed_msg: 'The queue is closed right now. Registration opens when the staff opens the queue.',
+    already_title: 'You are in the queue',
+    already_text: 'You are now in the queue. We will give you a number soon. You do not need to press again.',
+    got_number_title: 'You have received a queue number',
+    got_number_text: 'You already have your queue number. Food distribution starts soon and we will call your number, so please stay alert and wait for your turn.',
+    left_title: 'You have left the queue',
+    left_text: 'You are no longer in the queue. If you need a new place, the staff can help you.',
+    waiting_status: 'You are registered in the queue. We will give you a number soon.',
+    queue_number: 'Your queue number',
+    left_status: 'You have left the queue.',
+    note: 'You keep your place in the queue while waiting here. You do not need to press again.',
+    food_distribution: 'Food distribution',
+    pickup: 'Collection',
+    current_call_section: 'Current call',
+    status_section: 'Your status',
+    current_call_title: 'Current call',
+    current_call_none: 'No number is being called right now.',
+    current_call_prefix: 'We are calling number',
+    turn_now_banner_sub: 'Please go to the distribution point',
+    turn_soon_banner_sub: 'Get ready, it will be your turn soon',
+    ahead_prefix: 'People before you:',
+    turn_now_banner: 'It is your turn now',
+    turn_soon_banner: 'It will be your turn soon',
+    turn_wait_banner: 'You are in the queue and waiting for your number.'
+  },
+  es: {
+    queue_label: 'Fila digital',
+    language_label: 'Elegir idioma',
+    page_title: 'Fila digital',
+    page_version: 'Versión D13.4 – production ready',
+    howto_title: 'Cómo funciona',
+    howto_steps: '1. Escribe tu nombre si quieres<br>2. Pulsa <strong>Unirme a la fila</strong><br>3. Espera hasta recibir un número',
+    name_label: 'Tu nombre (opcional)',
+    name_placeholder: 'Escribe tu nombre si quieres',
+    join: 'Unirme a la fila',
+    queue_soon: 'La fila abre pronto',
+    leave: 'Salir de la fila',
+    not_found: 'No se pudo encontrar la fila.',
+    no_open_title: 'No hay una fila abierta ahora mismo',
+    no_open_text: 'Espera hasta que el personal abra la fila. Cuando la fila esté abierta, puedes usar el mismo código QR de nuevo.',
+    no_open_status: 'No hay una fila abierta ahora mismo.',
+    wait_msg: 'Pulsa el botón de abajo para unirte a la fila.',
+    closed_msg: 'La fila está cerrada ahora mismo. El registro se abre cuando el personal abre la fila.',
+    already_title: 'Ya estás en la fila',
+    already_text: 'Ahora estás en la fila. Pronto te daremos un número. No necesitas pulsar otra vez.',
+    got_number_title: 'Has recibido un número de fila',
+    got_number_text: 'Ya tienes tu número de fila. La distribución de comida empezará pronto y llamaremos tu número, así que mantente atento y espera tu turno.',
+    left_title: 'Has salido de la fila',
+    left_text: 'Ya no estás en la fila. Si necesitas un nuevo lugar, el personal puede ayudarte.',
+    waiting_status: 'Estás registrado en la fila. Pronto te daremos un número.',
+    queue_number: 'Tu número de fila',
+    left_status: 'Has salido de la fila.',
+    note: 'Conservas tu lugar en la fila mientras esperas aquí. No necesitas pulsar otra vez.',
+    food_distribution: 'Distribución de alimentos',
+    pickup: 'Recogida',
+    current_call_section: 'Llamando ahora',
+    status_section: 'Tu estado',
+    current_call_title: 'Llamando ahora',
+    current_call_none: 'No se está llamando a ningún número ahora mismo.',
+    current_call_prefix: 'Estamos llamando al número',
+    turn_now_banner_sub: 'Ve al punto de distribución',
+    turn_soon_banner_sub: 'Prepárate, pronto será tu turno',
+    ahead_prefix: 'Personas delante de ti:',
+    turn_now_banner: 'Ahora es tu turno',
+    turn_soon_banner: 'Pronto será tu turno',
+    turn_wait_banner: 'Estás en la fila y esperando tu número.'
+  },
+  ar: {
+    queue_label: 'الطابور الرقمي',
+    language_label: 'اختر اللغة',
+    page_title: 'الطابور الرقمي',
+    page_version: 'الإصدار D13.4 – production ready',
+    howto_title: 'كيف يعمل',
+    howto_steps: '1. اكتب اسمك إذا أردت<br>2. اضغط <strong>انضم إلى الطابور</strong><br>3. انتظر حتى تحصل على رقم',
+    name_label: 'اسمك (اختياري)',
+    name_placeholder: 'اكتب اسمك إذا أردت',
+    join: 'انضم إلى الطابور',
+    queue_soon: 'سيفتح الطابور قريباً',
+    leave: 'غادر الطابور',
+    not_found: 'تعذر العثور على الطابور.',
+    no_open_title: 'لا يوجد طابور مفتوح الآن',
+    no_open_text: 'يرجى الانتظار حتى يفتح الموظفون الطابور. عندما يفتح الطابور، يمكنك استخدام نفس رمز QR مرة أخرى.',
+    no_open_status: 'لا يوجد طابور مفتوح الآن.',
+    wait_msg: 'اضغط الزر أدناه للانضمام إلى الطابور.',
+    closed_msg: 'الطابور مغلق الآن. يفتح التسجيل عندما يفتح الموظفون الطابور.',
+    already_title: 'أنت في الطابور',
+    already_text: 'أنت الآن في الطابور. سنعطيك رقماً قريباً. لا تحتاج إلى الضغط مرة أخرى.',
+    got_number_title: 'لقد حصلت على رقم',
+    got_number_text: 'لديك رقمك بالفعل. سيبدأ توزيع الطعام قريباً وسننادي رقمك، لذا انتبه وانتظر دورك.',
+    left_title: 'لقد غادرت الطابور',
+    left_text: 'لم تعد في الطابور. إذا كنت بحاجة إلى مكان جديد، يمكن للموظفين مساعدتك.',
+    waiting_status: 'تم تسجيلك في الطابور. سنعطيك رقماً قريباً.',
+    queue_number: 'رقمك في الطابور',
+    left_status: 'لقد غادرت الطابور.',
+    note: 'ستحتفظ بمكانك في الطابور أثناء انتظارك هنا. لا تحتاج إلى الضغط مرة أخرى.',
+    food_distribution: 'توزيع الطعام',
+    pickup: 'الاستلام',
+    current_call_section: 'النداء الحالي',
+    status_section: 'حالتك',
+    current_call_title: 'النداء الحالي',
+    current_call_none: 'لا يتم نداء أي رقم الآن.',
+    current_call_prefix: 'نحن ننادي الرقم',
+    turn_now_banner_sub: 'توجه إلى نقطة التوزيع',
+    turn_soon_banner_sub: 'استعد، سيأتي دورك قريباً',
+    ahead_prefix: 'عدد الأشخاص قبلك:',
+    turn_now_banner: 'الآن جاء دورك',
+    turn_soon_banner: 'سيأتي دورك قريباً',
+    turn_wait_banner: 'أنت في الطابور وتنتظر رقمك.'
+  },
+  uk: {
+    queue_label: 'Цифрова черга',
+    language_label: 'Оберіть мову',
+    page_title: 'Цифрова черга',
+    page_version: 'Версія D13.4 – production ready',
+    howto_title: 'Як це працює',
+    howto_steps: '1. Введіть своє ім’я, якщо хочете<br>2. Натисніть <strong>Приєднатися до черги</strong><br>3. Зачекайте, поки отримаєте номер',
+    name_label: 'Ваше ім’я (необов’язково)',
+    name_placeholder: 'Введіть своє ім’я, якщо хочете',
+    join: 'Приєднатися до черги',
+    queue_soon: 'Черга скоро відкриється',
+    leave: 'Вийти з черги',
+    not_found: 'Чергу не знайдено.',
+    no_open_title: 'Зараз немає відкритої черги',
+    no_open_text: 'Будь ласка, зачекайте, поки персонал відкриє чергу. Коли черга відкриється, ви зможете знову скористатися тим самим QR-кодом.',
+    no_open_status: 'Зараз немає відкритої черги.',
+    wait_msg: 'Натисніть кнопку нижче, щоб приєднатися до черги.',
+    closed_msg: 'Черга зараз закрита. Реєстрація відкриється, коли персонал відкриє чергу.',
+    already_title: 'Ви в черзі',
+    already_text: 'Ви вже в черзі. Незабаром ми дамо вам номер. Не потрібно натискати ще раз.',
+    got_number_title: 'Ви отримали номер черги',
+    got_number_text: 'У вас уже є номер черги. Роздача їжі скоро почнеться, і ми оголосимо ваш номер, тож, будь ласка, стежте та чекайте своєї черги.',
+    left_title: 'Ви вийшли з черги',
+    left_text: 'Ви більше не в черзі. Якщо вам потрібне нове місце, персонал може допомогти.',
+    waiting_status: 'Вас зареєстровано в черзі. Незабаром ми дамо вам номер.',
+    queue_number: 'Ваш номер у черзі',
+    left_status: 'Ви вийшли з черги.',
+    note: 'Ви зберігаєте своє місце в черзі, поки чекаєте тут. Не потрібно натискати ще раз.',
+    food_distribution: 'Роздача їжі',
+    pickup: 'Отримання',
+    current_call_section: 'Поточний виклик',
+    status_section: 'Ваш статус',
+    current_call_title: 'Поточний виклик',
+    current_call_none: 'Зараз не викликають жодного номера.',
+    current_call_prefix: 'Зараз викликають номер',
+    turn_now_banner_sub: 'Підійдіть до місця видачі',
+    turn_soon_banner_sub: 'Приготуйтеся, скоро буде ваша черга',
+    ahead_prefix: 'Людей перед вами:',
+    turn_now_banner: 'Зараз ваша черга',
+    turn_soon_banner: 'Скоро буде ваша черга',
+    turn_wait_banner: 'Ви в черзі та очікуєте свій номер.'
+  }
+};
+
+function tQueue(key) {
+  const lang = QUEUE_I18N[currentQueueLang] ? currentQueueLang : 'sv';
+  return QUEUE_I18N[lang][key] || QUEUE_I18N.sv[key] || key;
+}
+
+function queueSafeText(key) {
+  const value = tQueue(key);
+  if (value && value !== key) return value;
+
+  const fallback = {
+    sv: {
+      howto_title: 'Så gör du',
+      howto_steps: '1. Skriv ditt namn om du vill<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer'
+    },
+    en: {
+      howto_title: 'How it works',
+      howto_steps: '1. Enter your name if you want<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number'
+    },
+    es: {
+      howto_title: 'Cómo funciona',
+      howto_steps: '1. Escribe tu nombre si quieres<br>2. Pulsa <strong>Unirme a la fila</strong><br>3. Espera hasta recibir un número'
+    },
+    ar: {
+      howto_title: 'كيف يعمل',
+      howto_steps: '1. اكتب اسمك إذا أردت<br>2. اضغط <strong>انضم إلى الطابور</strong><br>3. انتظر حتى تحصل على رقم'
+    },
+    uk: {
+      howto_title: 'Як це працює',
+      howto_steps: '1. Введіть своє ім’я, якщо хочете<br>2. Натисніть <strong>Приєднатися до черги</strong><br>3. Зачекайте, поки отримаєте номер'
+    }
+  };
+  const lang = QUEUE_I18N[currentQueueLang] ? currentQueueLang : 'sv';
+  return (fallback[lang] && fallback[lang][key]) || fallback.sv[key] || '';
+}
+
+function updateQueueLanguageUI() {
+  document.querySelectorAll('#queueLangBar .lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === currentQueueLang);
+  });
+}
+function translateQueueTitle(rawTitle) {
+  if (!rawTitle) return tQueue('queue_label');
+  const weekdays = {
+    sv: { monday:'måndag', tuesday:'tisdag', wednesday:'onsdag', thursday:'torsdag', friday:'fredag', saturday:'lördag', sunday:'söndag' },
+    en: { monday:'monday', tuesday:'tuesday', wednesday:'wednesday', thursday:'thursday', friday:'friday', saturday:'saturday', sunday:'sunday' },
+    es: { monday:'lunes', tuesday:'martes', wednesday:'miércoles', thursday:'jueves', friday:'viernes', saturday:'sábado', sunday:'domingo' },
+    ar: { monday:'الاثنين', tuesday:'الثلاثاء', wednesday:'الأربعاء', thursday:'الخميس', friday:'الجمعة', saturday:'السبت', sunday:'الأحد' },
+    uk: { monday:'понеділок', tuesday:'вівторок', wednesday:'середа', thursday:'четвер', friday:'пʼятниця', saturday:'субота', sunday:'неділя' }
+  };
+  const lang = QUEUE_I18N[currentQueueLang] ? currentQueueLang : 'sv';
+  let title = String(rawTitle);
+  title = title.replace(/Matutdelning/gi, tQueue('food_distribution'));
+  title = title.replace(/Hämtning/gi, tQueue('pickup'));
+  title = title.replace(/måndag|tisdag|onsdag|torsdag|fredag|lördag|söndag/gi, (m) => {
+    const keyMap = { 'måndag':'monday','tisdag':'tuesday','onsdag':'wednesday','torsdag':'thursday','fredag':'friday','lördag':'saturday','söndag':'sunday' };
+    return weekdays[lang][keyMap[m.toLowerCase()]] || m;
+  });
+  return title;
+}
+function updatePublicCalledNumber() {
+  const titleEl = document.getElementById('calledNumberTitle');
+  const valueEl = document.getElementById('calledNumberValue');
+  const subEl = document.getElementById('calledNumberSub');
+  if (!titleEl || !valueEl || !subEl) return;
+
+  titleEl.textContent = tQueue('current_call_title') || tQueue('current_call_live');
+
+  const queueId = (typeof getQueueIdFromUrl === 'function') ? getQueueIdFromUrl() : '';
+  if (!queueId || typeof getCurrentQueueNumber !== 'function') {
+    valueEl.textContent = '-';
+    subEl.textContent = tQueue('current_call_none');
+    return;
+  }
+
+  const current = getCurrentQueueNumber(queueId);
+  if (!current) {
+    valueEl.textContent = '-';
+    subEl.textContent = tQueue('current_call_none');
+    return;
+  }
+
+  valueEl.textContent = current;
+  subEl.textContent = tQueue('current_call_prefix') + ' ' + current + '.';
+}
+
+let lastQueueVibrationState = '';
+
+function triggerQueueVibration(pattern) {
+  try {
+    if (!document.hidden && navigator.vibrate) {
+      navigator.vibrate(pattern);
+      setTimeout(() => {
+        try { if (!document.hidden && navigator.vibrate) navigator.vibrate(pattern); } catch (e) {}
+      }, 250);
+    }
+  } catch (e) {}
+}
+
+function getQueueAlertStageKey(queueId, entryId) {
+  return 'hf_queue_alert_stage_' + queueId + '_' + entryId;
+}
+
+
+function updateUserTurnNotification(entry) {
+  const bannerEl = document.getElementById('queueTurnBanner');
+  const aheadEl = document.getElementById('queueAheadInfo');
+  if (!bannerEl) return;
+
+  bannerEl.className = 'turn-banner big-public';
+  if (aheadEl) {
+    aheadEl.textContent = '';
+    aheadEl.className = 'queue-ahead-pill';
+  }
+
+  if (!entry) {
+    bannerEl.textContent = '';
+    bannerEl.className = 'turn-banner big-public';
+    lastQueueVibrationState = '';
+    return;
+  }
+
+  if (entry.queue_number == null) {
+    bannerEl.textContent = tQueue('waiting_status');
+    bannerEl.className = 'turn-banner big-public show wait';
+    lastQueueVibrationState = 'waiting';
+    return;
+  }
+
+  const queueId = (typeof getQueueIdFromUrl === 'function') ? getQueueIdFromUrl() : '';
+  const current = (typeof getCurrentQueueNumber === 'function') ? getCurrentQueueNumber(queueId) : '';
+
+  if (!current) {
+    bannerEl.textContent = tQueue('turn_wait_banner');
+    bannerEl.className = 'turn-banner big-public show wait';
+    lastQueueVibrationState = 'assigned-no-current-' + entry.id;
+    return;
+  }
+
+  const diff = Number(entry.queue_number) - Number(current);
+  const ahead = Math.max(0, diff);
+
+  if (aheadEl && diff > 0) {
+    aheadEl.textContent = tQueue('ahead_prefix') + ' ' + ahead;
+    aheadEl.className = 'queue-ahead-pill show';
+  }
+
+  let stage = 'wait';
+  if (diff === 0) stage = 'now';
+  else if (diff > 0 && diff <= 3) stage = 'soon';
+
+  const vibrationState = stage + '-' + queueId + '-' + entry.id + '-' + current;
+  const stageKey = getQueueAlertStageKey(queueId, entry.id);
+  let previousStage = '';
+  try { previousStage = sessionStorage.getItem(stageKey) || ''; } catch (e) {}
+
+  if (stage === 'now') {
+    bannerEl.innerHTML = '🟢 ' + tQueue('turn_now_banner') + '<br><span style="font-size:15px;font-weight:800;">' + tQueue('turn_now_banner_sub') + '</span>';
+    bannerEl.className = 'turn-banner big-public show nowsoft';
+    try {
+      if (lastQueueVibrationState !== vibrationState || previousStage !== 'now') {
+        triggerQueueVibration([300, 120, 300, 120, 600]);
+        try { sessionStorage.setItem(stageKey, 'now'); } catch (e) {}
+      }
+    } catch (e) {}
+  } else if (stage === 'soon') {
+    bannerEl.innerHTML = '🟡 ' + tQueue('turn_soon_banner') + '<br><span style="font-size:15px;font-weight:800;">' + tQueue('turn_soon_banner_sub') + '</span>';
+    bannerEl.className = 'turn-banner big-public show ahead';
+    try {
+      if (lastQueueVibrationState !== vibrationState || previousStage !== 'soon') {
+        triggerQueueVibration([180, 100, 180]);
+        try { sessionStorage.setItem(stageKey, 'soon'); } catch (e) {}
+      }
+    } catch (e) {}
+  } else {
+    bannerEl.textContent = tQueue('turn_wait_banner');
+    bannerEl.className = 'turn-banner big-public show wait';
+    try { sessionStorage.setItem(stageKey, 'wait'); } catch (e) {}
+  }
+
+  lastQueueVibrationState = vibrationState;
+}
+
+
+function safeQueueText(key, fallback) {
+  const value = tQueue(key);
+  if (!value || value === key) return fallback;
+  return value;
+}
+
+function applyQueueLanguageStatic() {
+  const queueSection = document.getElementById('queueSectionLabel');
+  const languageLabel = document.getElementById('queueLanguageLabel');
+  const nameLabel = document.querySelector('#queueNameWrap .section-label');
+  const nameInput = document.getElementById('queueNameInput');
+  const leaveBtn = document.getElementById('queueLeaveBtn');
+  const note = document.querySelector('#queueCard .queue-note');
+  const pageTitle = document.getElementById('mainPageTitle');
+  const pageVersion = document.getElementById('mainPageVersion');
+  const currentCallLabel = document.getElementById('queueCurrentCallLabel');
+  const statusLabel = document.getElementById('queueStatusLabel');
+  const helperTitle = document.getElementById('queueHelperTitle');
+  const helperText = document.getElementById('queueHelperText');
+  const joinBtn = document.getElementById('queueJoinBtn');
+
+  if (queueSection) queueSection.textContent = tQueue('queue_label');
+  if (languageLabel) languageLabel.textContent = tQueue('language_label');
+  if (nameLabel) nameLabel.textContent = tQueue('name_label');
+  if (nameInput) nameInput.placeholder = tQueue('name_placeholder');
+  if (leaveBtn) leaveBtn.textContent = tQueue('leave');
+  if (note) note.textContent = tQueue('note');
+  if (currentCallLabel) currentCallLabel.textContent = tQueue('current_call_section');
+  if (statusLabel) statusLabel.textContent = tQueue('status_section');
+
+  if (isQueueMode()) {
+    if (pageTitle) pageTitle.textContent = tQueue('page_title');
+    if (pageVersion) pageVersion.textContent = tQueue('page_version');
+  }
+
+  const helperState = (helperTitle && helperTitle.dataset && helperTitle.dataset.state)
+    ? helperTitle.dataset.state
+    : 'default';
+
+  const defaultTitle = currentQueueLang === 'en' ? 'How it works' : 'Så gör du';
+  const defaultSteps = currentQueueLang === 'en'
+    ? '1. Enter your name if you want<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number'
+    : '1. Skriv ditt namn om du vill<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer';
+
+  if (helperTitle && helperText) {
+    if (helperState === 'default') {
+      helperTitle.textContent = defaultTitle;
+      helperText.innerHTML = defaultSteps;
+    } else if (helperState === 'waiting') {
+      helperTitle.textContent = tQueue('already_title');
+      helperText.innerHTML = tQueue('already_text');
+    } else if (helperState === 'assigned') {
+      helperTitle.textContent = tQueue('got_number_title');
+      helperText.innerHTML = tQueue('got_number_text');
+    } else if (helperState === 'left') {
+      helperTitle.textContent = tQueue('left_title');
+      helperText.innerHTML = tQueue('left_text');
+    } else if (helperState === 'noopen') {
+      helperTitle.textContent = tQueue('no_open_title');
+      helperText.innerHTML = tQueue('no_open_text');
+    } else {
+      helperTitle.textContent = defaultTitle;
+      helperText.innerHTML = defaultSteps;
+    }
+  }
+
+  if (joinBtn && !joinBtn.classList.contains('hidden')) {
+    const btnState = joinBtn.dataset.state || 'open';
+    joinBtn.textContent = btnState === 'closed' ? tQueue('queue_soon') : tQueue('join');
+  }
+
+  updatePublicCalledNumber();
+  updateQueueLanguageUI();
+}
+
+
+function forceQueueHelperTextSafe() {
+  const helperTitleEl = document.getElementById('queueHelperTitle');
+  const helperTextEl = document.getElementById('queueHelperText');
+
+  if (helperTitleEl) {
+    const raw = (helperTitleEl.textContent || '').trim();
+    if (!raw || raw === 'howto_title') {
+      helperTitleEl.textContent = queueSafeText('howto_title');
+    }
+  }
+
+  if (helperTextEl) {
+    const rawHtml = (helperTextEl.innerHTML || '').trim();
+    const rawText = (helperTextEl.textContent || '').trim();
+    if (!rawHtml || rawHtml === 'howto_steps' || rawText === 'howto_steps') {
+      helperTextEl.innerHTML = queueSafeText('howto_steps');
+    }
+  }
+}
+
+function setQueueLanguage(lang) {
+  currentQueueLang = QUEUE_I18N[lang] ? lang : 'sv';
+  try { localStorage.setItem(QUEUE_LANG_KEY, currentQueueLang); } catch (e) {}
+  applyQueueLanguageStatic();
+  if (typeof renderQueueView === 'function' && isQueueMode()) renderQueueView();
+forceQueueHelperTextSafe();
+if (typeof applyTranslations==='function'){applyTranslations();}
+}
+
+
+const CURRENT_NUMBER_KEY = 'hf_current_number_by_queue_v1';
+
+function getCurrentNumberMap() {
+  try { return JSON.parse(localStorage.getItem(CURRENT_NUMBER_KEY) || '{}'); } catch (e) { return {}; }
+}
+function getSelectedAdminQueueId() {
+  return document.getElementById('adminQueueSelect')?.value || '';
+}
+function getCurrentNumberForQueue(queueId) {
+  const map = getCurrentNumberMap();
+  return map[queueId] ?? null;
+}
+function setCurrentNumberForQueue(queueId, value) {
+  const map = getCurrentNumberMap();
+  if (value === null || value === undefined || value === '') {
+    delete map[queueId];
+  } else {
+    map[queueId] = String(value);
+  }
+  localStorage.setItem(CURRENT_NUMBER_KEY, JSON.stringify(map));
+}
+function updateCurrentNumberDisplay() {
+  const el = document.getElementById('currentNumberDisplay');
+  if (!el) return;
+  const queueId = getSelectedAdminQueueId();
+  if (!queueId) {
+    el.textContent = '-';
+    return;
+  }
+  const current = getCurrentNumberForQueue(queueId);
+  el.textContent = current || '-';
+}
+function setCurrentNumber() {
+  const queueId = getSelectedAdminQueueId();
+  if (!queueId) {
+    alert('Välj en kö först.');
+    return;
+  }
+  const current = getCurrentNumberForQueue(queueId) || '';
+  const num = prompt('Vilket nummer ropar ni upp just nu?', current);
+  if (num === null) return;
+  const clean = String(num).trim();
+  if (!clean) return;
+  if (!/^\d+$/.test(clean)) {
+    alert('Ange bara ett nummer.');
+    return;
+  }
+  setCurrentNumberForQueue(queueId, clean);
+  updateCurrentNumberDisplay();
+}
+function clearCurrentNumber() {
+  const queueId = getSelectedAdminQueueId();
+  if (!queueId) {
+    alert('Välj en kö först.');
+    return;
+  }
+  setCurrentNumberForQueue(queueId, null);
+  updateCurrentNumberDisplay();
+}
+async function callNextNumber() {
+  const queueId = document.getElementById('adminQueueSelect')?.value;
+  if (!queueId) {
+    alert('Välj en kö först.');
+    return;
+  }
+  if (callNextButtonLock) return;
+
+  const assigned = getQueueEntriesForSession(queueId)
+    .filter(r => r.status === 'assigned' && r.queue_number != null)
+    .slice()
+    .sort((a, b) => Number(a.queue_number) - Number(b.queue_number));
+
+  if (!assigned.length) {
+    showCallNextFeedback('Inga fler i kön.');
+    return;
+  }
+
+  const current = getCurrentQueueNumber(queueId);
+  let nextNumber = null;
+
+  if (!current) {
+    nextNumber = assigned[0].queue_number;
+  } else {
+    const currentNum = Number(current);
+    const bigger = assigned.find(r => Number(r.queue_number) > currentNum);
+    nextNumber = bigger ? bigger.queue_number : null;
+  }
+
+  if (nextNumber === null) {
+    showCallNextFeedback('Inga fler i kön.');
+    return;
+  }
+
+  const btn = document.getElementById('callNextBtn') || document.querySelector('[onclick="callNextNumber()"]');
+
+  try {
+    callNextButtonLock = true;
+    if (btn) {
+      btn.disabled = true;
+      btn.dataset.originalText = btn.textContent;
+      btn.textContent = 'Uppdaterar...';
+      btn.style.opacity = '0.75';
+    }
+
+    await api('/rest/v1/queue_sessions?id=eq.' + encodeURIComponent(queueId), {
+      method: 'PATCH',
+      headers: getHeaders(true, 'return=minimal'),
+      body: JSON.stringify({ current_called_number: Number(nextNumber) })
+    });
+    await reloadAll();
+    renderQueueAdminPanel();
+    showCallNextFeedback('Nummer ' + nextNumber + ' uppropat');
+    vibrateShort();
+  } catch (err) {
+    alert('Kunde inte ropa nästa nummer: ' + err.message);
+  } finally {
+    setTimeout(() => {
+      callNextButtonLock = false;
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = btn.dataset.originalText || 'Ropa nästa nummer';
+        btn.style.opacity = '';
+      }
+    }, 1000);
+  }
+}
+
+function assignNumbersToLateConfirm() {
+  const queueId = document.getElementById('adminQueueSelect')?.value;
+  if (!queueId) { alert('Välj en kö först.'); return; }
+
+  const rows = getQueueEntriesForSession(queueId);
+  const late = rows.filter(r => (r.status === 'waiting' || r.status === 'registered') && (r.queue_number == null));
+
+  if (!late.length) {
+    alert('Inga sena att tilldela nummer.');
+    return;
+  }
+
+  if (!confirm('Är du säker? Detta ger nästa lediga nummer till alla som väntar utan nummer.')) return;
+  assignNumbersToLate();
+}
+
+async function assignNumbersToLate() {
+  const queueId = document.getElementById('adminQueueSelect')?.value;
+  if (!queueId) { alert('Välj en kö först.'); return; }
+
+  const rows = getQueueEntriesForSession(queueId);
+
+  const assigned = rows
+    .filter(r => r.status === 'assigned' && r.queue_number != null)
+    .map(r => Number(r.queue_number));
+
+  const max = assigned.length ? Math.max(...assigned) : 0;
+
+  const late = rows
+    .filter(r => (r.status === 'waiting' || r.status === 'registered') && (r.queue_number == null));
+
+  if (!late.length) {
+    alert('Inga sena att tilldela nummer.');
+    return;
+  }
+
+  let next = max + 1;
+
+  try {
+    for (const row of late) {
+      await api('/rest/v1/queue_entries?id=eq.' + encodeURIComponent(row.id), {
+        method: 'PATCH',
+        headers: getHeaders(true, 'return=minimal'),
+        body: JSON.stringify({
+          queue_number: next,
+          assigned_at: new Date().toISOString(),
+          status: 'assigned'
+        })
+      });
+      next++;
+    }
+
+    await reloadAll();
+    renderQueueAdminPanel();
+    alert('Sena har fått nummer.');
+  } catch (err) {
+    alert('Kunde inte ge nummer till sena: ' + err.message);
+  }
+}
+
+function escapeHtml(v) {
+  return String(v ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function fmtDate(ds) {
+  if (!ds) return '';
+  try { return new Date(ds + 'T12:00:00').toLocaleDateString('sv-SE', { weekday:'long', year:'numeric', month:'long', day:'numeric' }); }
+  catch(e) { return ds; }
+}
+function isPickupEvent(ev) { return (ev?.activity_type || 'utdelning') === 'hamtning'; }
+function isSessionExpired(session) {
+  if (!session || !session.expires_at) return true;
+  return (Date.now() / 1000) >= Number(session.expires_at);
+}
+function clearAdminSession() {
+  adminSession = null;
+  localStorage.removeItem(ADMIN_SESSION_KEY);
+  document.getElementById('adminLogin').style.display = 'block';
+  document.getElementById('adminContent').classList.remove('show');
+}
+function ensureAdmin() {
+  if (!adminSession || !adminSession.access_token || isSessionExpired(adminSession)) {
+    clearAdminSession();
+    alert('Du måste vara inloggad som admin.');
+    throw new Error('Admin session missing');
+  }
+}
+function api(path, options = {}) {
+  const defaultHeaders = {
+    apikey: SUPABASE_KEY,
+    Authorization: 'Bearer ' + SUPABASE_KEY
+  };
+  const headers = { ...defaultHeaders, ...(options.headers || {}) };
+  return fetch(SUPABASE_URL + path, {
+    method: options.method || 'GET',
+    headers,
+    body: options.body || undefined
+  }).then(async res => {
+    const text = await res.text();
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+    if (!res.ok) throw new Error(data?.message || data?.error_description || data?.error || text || ('HTTP ' + res.status));
+    return data;
+  });
+}
+function getHeaders(useAdmin = false, prefer = '') {
+  let token = SUPABASE_KEY;
+  if (useAdmin && adminSession?.access_token) token = adminSession.access_token;
+  const h = {
+    apikey: SUPABASE_KEY,
+    Authorization: 'Bearer ' + token,
+    'Content-Type': 'application/json'
+  };
+  if (prefer) h['Prefer'] = prefer;
+  return h;
+}
+
+
+function getQueueLocationMeta(rawLocation) {
+  const raw = String(rawLocation || '');
+  const marker = '||VQV=';
+  const idx = raw.indexOf(marker);
+  if (idx === -1) {
+    return { cleanLocation: raw, volunteerVisible: false };
+  }
+  const cleanLocation = raw.slice(0, idx).trim();
+  const flag = raw.slice(idx + marker.length).trim();
+  return { cleanLocation, volunteerVisible: flag === '1' };
+}
+
+function isVolunteerQueueVisible(session) {
+  if (!session) return false;
+  return getQueueLocationMeta(session.location).volunteerVisible === true;
+}
+
+function setQueueVolunteerVisibleInLocation(rawLocation, visible) {
+  const meta = getQueueLocationMeta(rawLocation);
+  return meta.cleanLocation + '||VQV=' + (visible ? '1' : '0');
+}
+
+function updateVolunteerQueueOverview() {
+  const wrap = document.getElementById('volunteerQueueOverview');
+  const nameEl = document.getElementById('volunteerQueueOverviewName');
+  const currentEl = document.getElementById('volunteerQueueOverviewCurrent');
+  const assignedEl = document.getElementById('volunteerQueueOverviewAssigned');
+  const remainingEl = document.getElementById('volunteerQueueOverviewRemaining');
+  if (!wrap || !nameEl || !currentEl || !assignedEl || !remainingEl) return;
+
+  const relevant = queueSessionsCache
+    .filter(q => q && q.active !== false && isVolunteerQueueVisible(q))
+    .map(q => {
+      const assignedRows = getQueueEntriesForSession(q.id)
+        .filter(r => r.status === 'assigned' && r.queue_number != null)
+        .slice()
+        .sort((a, b) => Number(a.queue_number) - Number(b.queue_number));
+      const current = getCurrentQueueNumber(q.id);
+      const distributedCount = assignedRows.length;
+      const remainingCount = current == null || current === ''
+        ? distributedCount
+        : assignedRows.filter(r => Number(r.queue_number) > Number(current)).length;
+      return { session: q, current, distributedCount, remainingCount };
+    })
+    .sort((a, b) => {
+      if ((!!a.session.queue_open) !== (!!b.session.queue_open)) return a.session.queue_open ? -1 : 1;
+      const ad = String(a.session.date || '');
+      const bd = String(b.session.date || '');
+      if (ad !== bd) return ad.localeCompare(bd);
+      return String(a.session.time || '').localeCompare(String(b.session.time || ''));
+    });
+
+  if (!relevant.length) {
+    wrap.classList.remove('show');
+    return;
+  }
+
+  const chosen = relevant[0];
+  wrap.classList.add('show');
+  nameEl.textContent = chosen.session.title || 'Aktiv kö';
+  currentEl.textContent = chosen.current || '-';
+  assignedEl.textContent = String(chosen.distributedCount);
+  remainingEl.textContent = String(chosen.remainingCount);
+}
+
+async function toggleVolunteerQueueVisibility() {
+  ensureAdmin();
+  const queueId = document.getElementById('adminQueueSelect')?.value;
+  if (!queueId) { alert('Välj en kö först.'); return; }
+  const session = queueSessionsCache.find(q => q.id === queueId);
+  if (!session) { alert('Kön kunde inte hittas.'); return; }
+
+  const nextValue = !isVolunteerQueueVisible(session);
+  const nextLocation = setQueueVolunteerVisibleInLocation(session.location || '', nextValue);
+
+  try {
+    await api('/rest/v1/queue_sessions?id=eq.' + encodeURIComponent(queueId), {
+      method: 'PATCH',
+      headers: getHeaders(true, 'return=minimal'),
+      body: JSON.stringify({ location: nextLocation })
+    });
+    await reloadAll();
+    renderQueueAdminPanel();
+  } catch (err) {
+    alert('Kunde inte uppdatera kövisning för volontärer: ' + err.message);
+  }
+}
+
+async function loadEvents() {
+  eventsCache = await api('/rest/v1/events?select=*&order=date.asc');
+}
+async function loadSignups() {
+  signupsCache = await api('/rest/v1/signups?select=*&order=created_at.asc');
+}
+async function loadQueueSessions() {
+  queueSessionsCache = await api('/rest/v1/queue_sessions?select=*&order=created_at.desc');
+}
+async function loadQueueEntries() {
+  queueEntriesCache = await api('/rest/v1/queue_entries?select=*&order=joined_at.asc');
+}
+async function reloadAll() {
+  const selectedAdminEvent = document.getElementById('adminEventSelect')?.value || '';
+  const selectedCancelEvent = document.getElementById('cancelEventSelect')?.value || '';
+  const selectedQueue = document.getElementById('adminQueueSelect')?.value || '';
+
+  await Promise.all([loadEvents(), loadSignups(), loadQueueSessions(), loadQueueEntries()]);
+  if (typeof updateVolunteerQueueOverview === 'function') updateVolunteerQueueOverview();
+  renderPublicEvents();
+  renderMgmtList();
+  populateCancelSelect();
+  populateAdminEventSelect();
+  populateQueueSelect();
+
+  if (selectedAdminEvent) {
+    const sel = document.getElementById('adminEventSelect');
+    if (sel && [...sel.options].some(o => o.value === selectedAdminEvent)) {
+      sel.value = selectedAdminEvent;
+    }
+  }
+
+  if (selectedCancelEvent) {
+    const sel = document.getElementById('cancelEventSelect');
+    if (sel && [...sel.options].some(o => o.value === selectedCancelEvent)) {
+      sel.value = selectedCancelEvent;
+    }
+  }
+  if (selectedQueue) {
+    const sel = document.getElementById('adminQueueSelect');
+    if (sel && [...sel.options].some(o => o.value === selectedQueue)) {
+      sel.value = selectedQueue;
+    }
+  }
+  if (isQueueMode()) renderQueueView();
+forceQueueHelperTextSafe();
+if (typeof applyTranslations==='function'){applyTranslations();}
+}
+
+function renderPublicEvents() {
+  const el = document.getElementById('eventsList');
+  const howToBox = document.getElementById('howToBox');
+  const nameInputContainer = document.getElementById('nameInputContainer');
+  const activitySection = document.getElementById('activitySection');
+  const joinButtonWrap = document.getElementById('joinButtonWrap');
+
+  const active = eventsCache
+    .filter(e => e.active !== false)
+    .slice()
+    .sort((a, b) => {
+      const ad = String(a.date || '');
+      const bd = String(b.date || '');
+      if (ad !== bd) return ad.localeCompare(bd);
+      const at = String(a.time || '');
+      const bt = String(b.time || '');
+      if (at !== bt) return at.localeCompare(bt);
+      const ao = isPickupEvent(a) ? 1 : 0;
+      const bo = isPickupEvent(b) ? 1 : 0;
+      if (ao !== bo) return ao - bo;
+      return String(a.day_name || '').localeCompare(String(b.day_name || ''));
+    });
+
+  if (!active.length) {
+    selectedEventId = null;
+    if (howToBox) howToBox.style.display = 'none';
+    if (nameInputContainer) nameInputContainer.style.display = 'none';
+    if (joinButtonWrap) joinButtonWrap.style.display = 'none';
+    if (activitySection) activitySection.style.display = 'block';
+    el.innerHTML = '<div class="empty-state">Ingen aktivitet just nu.</div>';
+    return;
+  }
+
+  if (howToBox) howToBox.style.display = '';
+  if (nameInputContainer) nameInputContainer.style.display = '';
+  if (joinButtonWrap) joinButtonWrap.style.display = '';
+  if (activitySection) activitySection.style.display = '';
+
+  el.innerHTML = active.map(ev => {
+    const isSelected = selectedEventId === ev.id;
+
+    const pickupAllowed = getAllowedPickupLocations(ev).length;
+    const pickupBooked = getBookedPickupLocations(ev.id).size;
+    const pickupAvailable = Math.max(0, pickupAllowed - pickupBooked);
+
+    const confirmed = signupsCache.filter(s => s.event_id === ev.id && !s.is_waitlist).length;
+    const volunteerAvailable = Math.max(0, 7 - confirmed);
+
+    const infoLine = isPickupEvent(ev)
+      ? `${pickupAvailable} av ${pickupAllowed} hämtställen lediga`
+      : `${volunteerAvailable} av 7 platser lediga`;
+
+    const isFull = isPickupEvent(ev)
+      ? pickupAllowed > 0 && pickupAvailable === 0
+      : volunteerAvailable === 0;
+
+    let pickupHtml = '';
+    if (isSelected && isPickupEvent(ev)) {
+      const allowed = getAllowedPickupLocations(ev);
+      const booked = getBookedPickupLocations(ev.id);
+      pickupHtml = `
+        <div style="margin-top:10px;" onclick="event.stopPropagation()">
+          <div class="section-label">Välj var du kan hämta</div>
+          ${allowed.map(loc => {
+            const booking = signupsCache.find(s =>
+              s.event_id === ev.id &&
+              !s.is_waitlist &&
+              Array.isArray(s.selected_locations) &&
+              s.selected_locations.includes(loc)
+            );
+            const isBooked = !!booking;
+            const bookedByName = booking && booking.name ? String(booking.name).trim() : '';
+            return `
+              <label class="pickup-option ${isBooked ? 'booked' : ''}" onclick="event.stopPropagation()">
+                <input type="checkbox" value="${escapeHtml(loc)}" ${isBooked ? 'disabled' : ''} onclick="event.stopPropagation()" onchange="refreshSignupButton()">
+                <span onclick="event.stopPropagation()">
+                  <strong>${escapeHtml(loc)}</strong><br><small>${isBooked ? ('Redan bokat' + (bookedByName ? ' · Bokad av: ' + escapeHtml(bookedByName) : '')) : 'Ledigt'}</small>
+                </span>
+              </label>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    return `
+      <div class="event-card ${isSelected ? 'selected' : ''}">
+        <div class="event-top" onclick="selectEvent('${ev.id}')">
+          <div class="event-emoji">${isPickupEvent(ev) ? '🚚' : '🍽️'}</div>
+          <div style="flex:1;">
+            <div class="event-title">${escapeHtml(ev.day_name)}</div>
+            <div class="event-sub">${escapeHtml(fmtDate(ev.date))}</div>
+            <div class="event-sub">${isPickupEvent(ev) ? 'Hämtning från partner/donatörer' : 'Matutdelning'}${ev.time ? ' · ' + escapeHtml(ev.time) : ''}${ev.location ? ' · ' + escapeHtml(ev.location) : ''}</div>
+            <div class="status-line ${isFull ? 'full' : ''}">
+              ${isFull ? (isPickupEvent(ev) ? '🔴 Fullbokad hämtning' : '🔴 Fullbokad – reservlista gäller') : (isPickupEvent(ev) ? '🟢 ' + infoLine : (volunteerAvailable <= 2 ? '🟡 ' + infoLine : '🟢 ' + infoLine))}
+            </div>
+            ${isPickupEvent(ev) ? '<span class="tag">Hämtning</span>' : '<span class="tag">Matutdelning</span>'}
+            ${isSelected ? '<div class="selected-badge">Vald aktivitet</div>' : ''}
+            ${pickupHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  updateVolunteerAgreementVisibility();
+  refreshSignupButton();
+}
+
+function getAllowedPickupLocations(ev) {
+  return Array.isArray(ev?.allowed_pickup_locations) ? ev.allowed_pickup_locations : [];
+}
+function getBookedPickupLocations(eventId) {
+  const booked = new Set();
+  signupsCache
+    .filter(s => s.event_id === eventId && !s.is_waitlist)
+    .forEach(s => (Array.isArray(s.selected_locations) ? s.selected_locations : []).forEach(loc => booked.add(loc)));
+  return booked;
+}
+function renderPickupSelector() {
+  const wrap = document.getElementById('pickupSelectorWrap');
+  const ev = eventsCache.find(e => e.id === selectedEventId);
+
+  if (!ev || !isPickupEvent(ev)) {
+    wrap.classList.add('hidden');
+    wrap.innerHTML = '';
+    return;
+  }
+
+  const allowed = getAllowedPickupLocations(ev);
+  const booked = getBookedPickupLocations(ev.id);
+
+  wrap.classList.remove('hidden');
+  wrap.innerHTML = '<div class="section-label">Välj var du kan hämta</div>' + allowed.map(loc => {
+    const isBooked = booked.has(loc);
+    return `
+      <label class="pickup-option ${isBooked ? 'booked' : ''}" onclick="event.stopPropagation()">
+        <input type="checkbox" value="${escapeHtml(loc)}" ${isBooked ? 'disabled' : ''} onclick="event.stopPropagation()" onchange="refreshSignupButton()">
+        <span onclick="event.stopPropagation()"><strong>${escapeHtml(loc)}</strong><br><small>${isBooked ? 'Redan bokat' : 'Ledigt'}</small></span>
+      </label>
+    `;
+  }).join('');
+}
+function selectEvent(id) {
+  selectedEventId = id;
+  hidePublicStatus();
+  renderPublicEvents();
+  
+}
+
+function getPickupBookedByOthers(eventId, locations, ownSignupId = null) {
+  return locations.filter(loc =>
+    signupsCache.some(s =>
+      s.event_id === eventId &&
+      s.id !== ownSignupId &&
+      !s.is_waitlist &&
+      Array.isArray(s.selected_locations) &&
+      s.selected_locations.includes(loc)
+    )
+  );
+}
+
+function getSignupByName(eventId, name) {
+  const clean = String(name || '').trim().toLowerCase();
+  return signupsCache.find(s =>
+    s.event_id === eventId &&
+    String(s.name || '').trim().toLowerCase() === clean
+  );
+}
+
+
+function resetVolunteerAgreement() {
+  const cb = document.getElementById('volunteerAgreementCheckbox');
+  if (cb) cb.checked = false;
+}
+
+function updateVolunteerAgreementVisibility() {
+  const wrap = document.getElementById('volunteerAgreementWrap');
+  const cb = document.getElementById('volunteerAgreementCheckbox');
+  const ev = eventsCache.find(e => e.id === selectedEventId);
+  if (!wrap || !cb) return;
+
+  if (ev) {
+    wrap.classList.remove('hidden');
+  } else {
+    wrap.classList.add('hidden');
+    cb.checked = false;
+  }
+}
+
+function isVolunteerAgreementChecked() {
+  return document.getElementById('volunteerAgreementCheckbox')?.checked === true;
+}
 
 function refreshSignupButton() {
   const btn = document.getElementById('signupBtn');
   const name = document.getElementById('nameInput').value.trim();
   const ev = eventsCache.find(e => e.id === selectedEventId);
-  const agreementChecked = document.getElementById('volunteerAgreementCheckbox')?.checked;
+  const agreementChecked = isVolunteerAgreementChecked();
+
+  updateVolunteerAgreementVisibility();
 
   if (!ev) {
     btn.disabled = true;
     btn.textContent = 'Välj aktivitet först';
+    return;
+  }
+
+  if (!name) {
+    btn.disabled = true;
+    btn.textContent = 'Fyll i namn först';
     return;
   }
 
@@ -53,52 +2172,1409 @@ function refreshSignupButton() {
   }
 
   if (isPickupEvent(ev)) {
-    const selectedPickup = Array.from(
-      document.querySelectorAll('.event-card.selected .pickup-option input:checked')
-    ).length;
-
+    const selectedPickup = Array.from(document.querySelectorAll('.event-card.selected .pickup-option input:checked')).length;
     btn.disabled = !(name && selectedPickup > 0 && agreementChecked);
-
-    btn.textContent =
-      !name
-        ? 'Fyll i namn först'
-        : selectedPickup === 0
-          ? 'Välj hämtställe först'
-          : 'Jag vill hjälpa till';
-
+    btn.textContent = selectedPickup === 0 ? 'Välj hämtställe först' : 'Jag vill hjälpa till';
   } else {
     btn.disabled = !(selectedEventId && name && agreementChecked);
+    btn.textContent = 'Jag vill hjälpa till';
+  }
+}
+function showPublicStatus(text, ok = true) {
+  const el = document.getElementById('publicStatus');
+  el.textContent = text;
+  el.className = 'status-msg show ' + (ok ? 'ok' : 'err');
+}
+function hidePublicStatus() {
+  const el = document.getElementById('publicStatus');
+  el.textContent = '';
+  el.className = 'status-msg';
+}
 
-    btn.textContent =
-      !name
-        ? 'Fyll i namn först'
-        : 'Jag vill hjälpa till';
+async function submitSignup() {
+  const name = document.getElementById('nameInput').value.trim();
+  const ev = eventsCache.find(e => e.id === selectedEventId);
+
+  if (!name || !ev) return;
+
+  if (!isVolunteerAgreementChecked()) {
+    showPublicStatus('Du behöver godkänna villkoren innan du anmäler dig.', false);
+    refreshSignupButton();
+    return;
+  }
+
+  try {
+    hidePublicStatus();
+
+    // Always refresh latest signups before saving to avoid stale booking data.
+    await loadSignups();
+
+    const existingSignup = getSignupByName(ev.id, name);
+
+    let result;
+    if (isPickupEvent(ev)) {
+      const selectedLocations = Array.from(document.querySelectorAll('.event-card.selected .pickup-option input:checked')).map(x => x.value);
+      if (!selectedLocations.length) {
+        showPublicStatus('Välj minst ett hämtställe.', false);
+        return;
+      }
+
+      if (existingSignup) {
+        const currentLocations = Array.isArray(existingSignup.selected_locations) ? existingSignup.selected_locations : [];
+        const newUniqueLocations = selectedLocations.filter(loc => !currentLocations.includes(loc));
+
+        if (!newUniqueLocations.length) {
+          showPublicStatus('Du har redan bokat de valda hämtställena.', false);
+          return;
+        }
+
+        const bookedByOthers = newUniqueLocations.filter(loc =>
+          signupsCache.some(s =>
+            s.event_id === ev.id &&
+            s.id !== existingSignup.id &&
+            Array.isArray(s.selected_locations) &&
+            s.selected_locations.includes(loc) &&
+            !s.is_waitlist
+          )
+        );
+
+        if (bookedByOthers.length) {
+          showPublicStatus('Ett eller flera valda hämtställen är redan bokade.', false);
+          return;
+        }
+
+        await loadSignups();
+        const latestExistingSignup = getSignupByName(ev.id, name) || existingSignup;
+        const latestCurrentLocations = Array.isArray(latestExistingSignup.selected_locations) ? latestExistingSignup.selected_locations : currentLocations;
+        const latestNewUniqueLocations = selectedLocations.filter(loc => !latestCurrentLocations.includes(loc));
+        const latestConflicts = getPickupBookedByOthers(ev.id, latestNewUniqueLocations, latestExistingSignup.id);
+
+        if (latestConflicts.length) {
+          showPublicStatus('Ett eller flera hämtställen är precis bokade av någon annan: ' + latestConflicts.join(', ') + '. Välj ett annat hämtställe.', false);
+          renderPublicEvents();
+          return;
+        }
+
+        const mergedLocations = [...latestCurrentLocations, ...latestNewUniqueLocations];
+
+        await api('/rest/v1/signups?id=eq.' + encodeURIComponent(latestExistingSignup.id), {
+          method: 'PATCH',
+          headers: getHeaders(false, 'return=minimal'),
+          body: JSON.stringify({
+            selected_locations: mergedLocations
+          })
+        });
+
+        await reloadAll();
+
+        document.getElementById('confirmBadge').textContent = mergedLocations.join(', ');
+        document.getElementById('confirmMsg').textContent = 'Dina hämtställen har uppdaterats.';
+        document.getElementById('confirmTitle').textContent = 'Din bokning är uppdaterad!';
+      } else {
+        await loadSignups();
+        const conflicts = getPickupBookedByOthers(ev.id, selectedLocations);
+        if (conflicts.length) {
+          showPublicStatus('Ett eller flera hämtställen är precis bokade av någon annan: ' + conflicts.join(', ') + '. Välj ett annat hämtställe.', false);
+          renderPublicEvents();
+          return;
+        }
+
+        result = await api('/rest/v1/rpc/signup_volunteer_v2', {
+          method: 'POST',
+          headers: getHeaders(false),
+          body: JSON.stringify({
+            p_event_id: ev.id,
+            p_name: name,
+            p_selected_locations: selectedLocations
+          })
+        });
+
+        await reloadAll();
+
+        const afterSignup = getSignupByName(ev.id, name);
+        const stillConflicting = getPickupBookedByOthers(ev.id, selectedLocations, afterSignup?.id || null);
+        if (stillConflicting.length) {
+          showPublicStatus('Bokningen kunde inte bekräftas eftersom något hämtställe redan bokats av annan volontär: ' + stillConflicting.join(', ') + '.', false);
+          renderPublicEvents();
+          return;
+        }
+
+        document.getElementById('confirmBadge').textContent = selectedLocations.join(', ');
+        document.getElementById('confirmMsg').textContent = 'Tack! Du är nu anmäld till hämtningen.';
+        document.getElementById('confirmTitle').textContent = 'Du är anmäld!';
+      }
+    } else {
+      if (existingSignup) {
+        showPublicStatus('Du är redan anmäld till denna aktivitet.', false);
+        return;
+      }
+
+      result = await api('/rest/v1/rpc/signup_volunteer', {
+        method: 'POST',
+        headers: getHeaders(false),
+        body: JSON.stringify({
+          p_event_id: ev.id,
+          p_name: name
+        })
+      });
+
+      await reloadAll();
+
+      const status = Array.isArray(result) && result[0] ? result[0].status : 'confirmed';
+      if (status === 'duplicate') {
+        showPublicStatus('Du är redan anmäld till denna aktivitet.', false);
+        return;
+      }
+
+      const confirmedSignup = getSignupByName(ev.id, name);
+      if (!confirmedSignup) {
+        showPublicStatus('Anmälan kunde inte bekräftas. Försök igen eller skriv till ansvarig.', false);
+        renderPublicEvents();
+        return;
+      }
+
+      document.getElementById('confirmBadge').textContent = ev.day_name + ' – ' + ev.date;
+      document.getElementById('confirmMsg').textContent = 'Tack! Din anmälan är nu registrerad.';
+      document.getElementById('confirmTitle').textContent = 'Du är anmäld!';
+    }
+
+    document.getElementById('mainForm').classList.add('hidden');
+    document.getElementById('confirmScreen').classList.remove('hidden');
+  } catch (err) {
+    showPublicStatus('Något gick fel: ' + err.message, false);
+  }
+}
+function resetForm() {
+  document.getElementById('confirmScreen').classList.add('hidden');
+  document.getElementById('mainForm').classList.remove('hidden');
+  document.getElementById('nameInput').value = '';
+  selectedEventId = null;
+  
+  renderPublicEvents();
+  hidePublicStatus();
+}
+
+
+function toggleCancel() {
+  showVolunteerView();
+  const card = document.getElementById('cancelCard');
+  if (card) card.classList.toggle('hidden');
+  populateCancelSelect();
+  renderCancelOptions();
+}
+function populateCancelSelect() {
+  const sel = document.getElementById('cancelEventSelect');
+  const active = eventsCache.filter(e => e.active !== false);
+  sel.innerHTML = '<option value="">— Välj aktivitet —</option>' + active.map(ev =>
+    `<option value="${ev.id}">${escapeHtml(ev.day_name)} ${escapeHtml(ev.date)} · ${isPickupEvent(ev) ? 'Hämtning' : 'Matutdelning'}</option>`
+  ).join('');
+}
+function renderCancelOptions() {
+  const name = document.getElementById('cancelName').value.trim().toLowerCase();
+  const eventId = document.getElementById('cancelEventSelect').value;
+  const wrap = document.getElementById('cancelPickupWrap');
+  const btn = document.getElementById('cancelBtn');
+  const msg = document.getElementById('cancelMsg');
+  msg.textContent = '';
+  msg.className = 'status-msg';
+
+  if (!eventId || !name) {
+    wrap.classList.add('hidden');
+    wrap.innerHTML = '';
+    btn.textContent = 'Ta bort min anmälan';
+    return;
+  }
+
+  const ev = eventsCache.find(e => e.id === eventId);
+  const signup = signupsCache.find(s =>
+    s.event_id === eventId &&
+    String(s.name || '').trim().toLowerCase() === name
+  );
+
+  if (!ev || !signup || !isPickupEvent(ev)) {
+    wrap.classList.add('hidden');
+    wrap.innerHTML = '';
+    btn.textContent = 'Ta bort min anmälan';
+    return;
+  }
+
+  const locations = Array.isArray(signup.selected_locations) ? signup.selected_locations : [];
+  if (!locations.length) {
+    wrap.classList.add('hidden');
+    wrap.innerHTML = '';
+    btn.textContent = 'Ta bort min anmälan';
+    return;
+  }
+
+  wrap.classList.remove('hidden');
+  wrap.innerHTML = '<div class="section-label">Välj hämtställen att avboka</div>' + locations.map(loc => `
+    <label class="pickup-option">
+      <input type="checkbox" value="${escapeHtml(loc)}">
+      <span><strong>${escapeHtml(loc)}</strong><br><small>Markera bara de hämtningar du vill avboka</small></span>
+    </label>
+  `).join('');
+  btn.textContent = 'Avboka valda hämtningar / ta bort anmälan';
+}
+async function doCancel() {
+  const name = document.getElementById('cancelName').value.trim();
+  const eventId = document.getElementById('cancelEventSelect').value;
+  const msg = document.getElementById('cancelMsg');
+
+  if (!name || !eventId) {
+    msg.textContent = 'Fyll i namn och välj aktivitet.';
+    msg.className = 'status-msg show err';
+    return;
+  }
+
+  const ev = eventsCache.find(e => e.id === eventId);
+  const signup = signupsCache.find(s =>
+    s.event_id === eventId &&
+    String(s.name || '').trim().toLowerCase() === name.toLowerCase()
+  );
+
+  if (!signup) {
+    msg.textContent = 'Hittade ingen anmälan med det namnet för aktiviteten.';
+    msg.className = 'status-msg show err';
+    return;
+  }
+
+  try {
+    if (ev && isPickupEvent(ev)) {
+      const selectedToRemove = Array.from(document.querySelectorAll('#cancelPickupWrap input:checked')).map(x => x.value);
+      const current = Array.isArray(signup.selected_locations) ? signup.selected_locations : [];
+
+      if (selectedToRemove.length) {
+        const remaining = current.filter(loc => !selectedToRemove.includes(loc));
+
+        if (remaining.length === 0) {
+          await api('/rest/v1/signups?id=eq.' + encodeURIComponent(signup.id), {
+            method: 'DELETE',
+            headers: getHeaders(false, 'return=minimal')
+          });
+          msg.textContent = 'Hela din hämtbokning har tagits bort.';
+        } else {
+          await api('/rest/v1/signups?id=eq.' + encodeURIComponent(signup.id), {
+            method: 'PATCH',
+            headers: getHeaders(false, 'return=minimal'),
+            body: JSON.stringify({ selected_locations: remaining })
+          });
+          msg.textContent = 'Valda hämtningar har avbokats.';
+        }
+      } else {
+        await api('/rest/v1/signups?id=eq.' + encodeURIComponent(signup.id), {
+          method: 'DELETE',
+          headers: getHeaders(false, 'return=minimal')
+        });
+        msg.textContent = 'Din hämtbokning har tagits bort.';
+      }
+      msg.className = 'status-msg show ok';
+    } else {
+      await api('/rest/v1/signups?id=eq.' + encodeURIComponent(signup.id), {
+        method: 'DELETE',
+        headers: getHeaders(false, 'return=minimal')
+      });
+      msg.textContent = 'Din anmälan har tagits bort.';
+      msg.className = 'status-msg show ok';
+    }
+
+    document.getElementById('cancelName').value = '';
+    document.getElementById('cancelEventSelect').value = '';
+    document.getElementById('cancelPickupWrap').classList.add('hidden');
+    document.getElementById('cancelPickupWrap').innerHTML = '';
+    document.getElementById('cancelBtn').textContent = 'Ta bort min anmälan';
+    await reloadAll();
+  } catch (err) {
+    msg.textContent = 'Kunde inte ta bort/avboka: ' + err.message;
+    msg.className = 'status-msg show err';
   }
 }
 
 
-/* =========================
-CSS – LÄGG I STYLE-BLOCKET
-========================= */
+function populateAdminEventSelect() {
+  const sel = document.getElementById('adminEventSelect');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Välj aktivitet —</option>' + eventsCache.map(ev =>
+    `<option value="${ev.id}">${escapeHtml(ev.day_name)} ${escapeHtml(ev.date)} · ${isPickupEvent(ev) ? 'Hämtning' : 'Matutdelning'}</option>`
+  ).join('');
+}
+function renderSignupAdminList() {
+  const eventId = document.getElementById('adminEventSelect')?.value;
+  const el = document.getElementById('adminSignupList');
+  if (!el) return;
 
-.agreement-box{
-  margin-top:14px;
-  background:#fff8f7;
-  border:1px solid rgba(229,57,53,.14);
-  border-radius:18px;
-  padding:14px;
+  if (!eventId) {
+    el.innerHTML = '<div class="empty-state">Ingen aktivitet vald.</div>';
+    return;
+  }
+
+  const ev = eventsCache.find(e => e.id === eventId);
+  const rows = signupsCache.filter(s => s.event_id === eventId);
+
+  if (!rows.length) {
+    el.innerHTML = '<div class="empty-state">Inga anmälningar till denna aktivitet.</div>';
+    return;
+  }
+
+  el.innerHTML = rows.map(row => {
+    const locations = Array.isArray(row.selected_locations) ? row.selected_locations : [];
+    const locationsHtml = isPickupEvent(ev)
+      ? (locations.length
+          ? locations.map(loc => `
+            <div class="pickup-item-row">
+              <div style="font-size:12px;font-weight:800;">${escapeHtml(loc)}</div>
+              <button class="small-btn delete" type="button" onclick="adminRemovePickupLocation('${row.id}', '${encodeURIComponent(loc)}')">Ta bort</button>
+            </div>
+          `).join('')
+          : '<div class="signup-admin-sub">Inga hämtställen valda.</div>')
+      : '';
+
+    return `
+      <div class="signup-admin-card">
+        <div class="signup-admin-header">
+          <div style="flex:1;min-width:0;">
+            <div class="signup-admin-name">${escapeHtml(row.name)}</div>
+            <div class="signup-admin-sub">${row.is_waitlist ? 'Reserv' : 'Bekräftad'}${isPickupEvent(ev) ? ' · Hämtning' : ' · Matutdelning'}</div>
+          </div>
+          <button class="small-btn delete" type="button" onclick="adminRemoveSignup('${row.id}')">Ta bort person</button>
+        </div>
+        ${isPickupEvent(ev) ? `<div style="margin-top:10px;" onclick="event.stopPropagation()"><div class="section-label">Valda hämtställen</div>${locationsHtml}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+async function adminRemoveSignup(signupId) {
+  ensureAdmin();
+  if (!confirm('Ta bort hela denna anmälan?')) return;
+  await api('/rest/v1/signups?id=eq.' + encodeURIComponent(signupId), {
+    method: 'DELETE',
+    headers: getHeaders(true, 'return=minimal')
+  });
+  await reloadAll();
+  renderSignupAdminList();
+}
+async function adminRemovePickupLocation(signupId, encodedLoc) {
+  ensureAdmin();
+  const loc = decodeURIComponent(encodedLoc);
+  const row = signupsCache.find(s => s.id === signupId);
+  if (!row) return;
+
+  const current = Array.isArray(row.selected_locations) ? row.selected_locations : [];
+  const remaining = current.filter(x => x !== loc);
+
+  if (!confirm('Ta bort detta hämtställe från volontären?')) return;
+
+  if (!remaining.length) {
+    await api('/rest/v1/signups?id=eq.' + encodeURIComponent(signupId), {
+      method: 'DELETE',
+      headers: getHeaders(true, 'return=minimal')
+    });
+  } else {
+    await api('/rest/v1/signups?id=eq.' + encodeURIComponent(signupId), {
+      method: 'PATCH',
+      headers: getHeaders(true, 'return=minimal'),
+      body: JSON.stringify({ selected_locations: remaining })
+    });
+  }
+
+  await reloadAll();
+  renderSignupAdminList();
 }
 
-.agreement-label{
-  display:flex;
-  align-items:flex-start;
-  gap:12px;
-  font-size:14px;
-  line-height:1.5;
-  color:#374151;
+function renderCreatePickupOptions() {
+  const type = document.getElementById('newActivityType')?.value;
+  const wrap = document.getElementById('pickupWrap');
+  const list = document.getElementById('pickupList');
+  if (!wrap || !list) return;
+
+  if (type !== 'hamtning') {
+    wrap.classList.add('hidden');
+    list.innerHTML = '';
+    return;
+  }
+
+  wrap.classList.remove('hidden');
+  list.innerHTML = PICKUP_LOCATIONS.map(loc => `
+    <label class="event-card" style="display:flex;gap:10px;align-items:flex-start;padding:12px;margin-bottom:8px;">
+      <input type="checkbox" value="${escapeHtml(loc)}" style="margin-top:4px;">
+      <span><strong>${escapeHtml(loc)}</strong></span>
+    </label>
+  `).join('');
 }
 
-.agreement-label input{
-  margin-top:4px;
-  transform:scale(1.15);
+function toggleAdmin() {
+  showAdminDashboard();
 }
+async function doLogin() {
+  const email = document.getElementById('adminEmailInput').value.trim();
+  const password = document.getElementById('adminPwInput').value;
+  const errEl = document.getElementById('loginError');
+  errEl.classList.remove('show');
+
+  if (!email || !password) {
+    errEl.textContent = '❌ Ange e-post och lösenord.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  try {
+    const data = await api('/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
+    adminSession = data;
+    localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(data));
+    document.getElementById('adminLogin').style.display = 'none';
+    document.getElementById('adminContent').classList.add('show');
+  } catch (err) {
+    errEl.textContent = '❌ ' + err.message;
+    errEl.classList.add('show');
+  }
+}
+function doLogout() { clearAdminSession(); }
+function restoreAdminSession() {
+  if (adminSession && adminSession.access_token && !isSessionExpired(adminSession)) {
+    document.getElementById('adminLogin').style.display = 'none';
+    document.getElementById('adminContent').classList.add('show');
+  } else if (adminSession) {
+    clearAdminSession();
+  }
+}
+function switchTab(n) {
+  [0,1,2,3].forEach(i => {
+    document.getElementById('tabBtn' + i).classList.toggle('active', i === n);
+    document.getElementById('tab' + i).classList.toggle('hidden', i !== n);
+  });
+
+  if (n === 2) {
+    stopAdminQueuePolling();
+    populateAdminEventSelect();
+    renderSignupAdminList();
+  } else if (n === 3) {
+    populateQueueSelect();
+    renderQueueAdminPanel();
+    startAdminQueuePolling();
+  } else {
+    stopAdminQueuePolling();
+  }
+}
+function showCreateError(text) {
+  const el = document.getElementById('createError');
+  el.textContent = text;
+  el.className = 'status-msg show err';
+}
+function hideCreateError() {
+  const el = document.getElementById('createError');
+  el.textContent = '';
+  el.className = 'status-msg';
+}
+async function addEvent() {
+  ensureAdmin();
+  if (isCreatingEvent) return;
+
+  const btn = document.getElementById('createEventBtn');
+  const type = document.getElementById('newActivityType').value;
+  const dayName = document.getElementById('newDayName').value.trim();
+  const date = document.getElementById('newDate').value;
+  const time = document.getElementById('newTime').value.trim();
+  const location = document.getElementById('newLocation').value.trim();
+  const selectedLocations = type === 'hamtning'
+    ? Array.from(document.querySelectorAll('#pickupList input:checked')).map(x => x.value)
+    : [];
+
+  hideCreateError();
+
+  if (!dayName || !date) {
+    showCreateError('Ange rubrik och datum.');
+    return;
+  }
+  if (type === 'hamtning' && !selectedLocations.length) {
+    showCreateError('Välj minst ett hämtställe.');
+    return;
+  }
+
+  try {
+    isCreatingEvent = true;
+    btn.disabled = true;
+    await api('/rest/v1/events', {
+      method: 'POST',
+      headers: getHeaders(true, 'return=minimal'),
+      body: JSON.stringify([{
+        day_name: dayName,
+        date,
+        time: time || null,
+        location: setQueueVolunteerVisibleInLocation(location || '', false),
+        active: true,
+        max_volunteers: 7,
+        activity_type: type,
+        allowed_pickup_locations: selectedLocations,
+        queue_enabled: false,
+        queue_open: false,
+        location: false,
+        queue_assigned: false,
+        queue_assigned_at: null
+      }])
+    });
+
+    document.getElementById('newActivityType').value = 'utdelning';
+    document.getElementById('newDayName').value = '';
+    document.getElementById('newDate').value = '';
+    document.getElementById('newTime').value = '';
+    document.getElementById('newLocation').value = '';
+
+    const success = document.getElementById('createSuccess');
+    success.classList.add('show');
+    setTimeout(() => success.classList.remove('show'), 2500);
+
+    await reloadAll();
+    switchTab(1);
+  } catch (err) {
+    showCreateError('Kunde inte skapa aktivitet: ' + err.message);
+  } finally {
+    isCreatingEvent = false;
+    btn.disabled = false;
+  }
+}
+function renderMgmtList() {
+  const el = document.getElementById('mgmtList');
+  if (!eventsCache.length) {
+    el.innerHTML = '<div class="empty-state">Inga aktiviteter skapade än.</div>';
+    return;
+  }
+  el.innerHTML = eventsCache.map(ev => {
+    const count = signupsCache.filter(s => s.event_id === ev.id).length;
+    return `
+      <div class="mgmt-item">
+        <div class="mgmt-top">
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:900;">${escapeHtml(ev.day_name)}</div>
+            <div style="font-size:12px;color:#6b7280;">${escapeHtml(fmtDate(ev.date))}</div>
+            <div style="font-size:12px;color:#6b7280;margin-top:4px;">${isPickupEvent(ev) ? 'Hämtning från partner/donatörer' : 'Matutdelning'}${ev.time ? ' · ' + escapeHtml(ev.time) : ''}${ev.location ? ' · ' + escapeHtml(ev.location) : ''}</div>${isPickupEvent(ev) ? `<div style="font-size:12px;color:#6b7280;margin-top:4px;">${getAllowedPickupLocations(ev).length} valda hämtställen</div>` : ''}
+            <div style="font-size:12px;color:#6b7280;margin-top:4px;">${count} anmälda</div>
+            ${isPickupEvent(ev) ? '<span class="tag">Hämtning</span>' : '<span class="tag">Matutdelning</span>'}
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+            <button class="mini-btn ${ev.active !== false ? 'active' : ''}" type="button" onclick="toggleEventActive('${ev.id}')">${ev.active !== false ? 'Aktiv' : 'Inaktiv'}</button>
+            <button class="mini-btn delete" type="button" onclick="deleteEvent('${ev.id}')">Ta bort</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+async function toggleEventActive(id) {
+  ensureAdmin();
+  const ev = eventsCache.find(e => e.id === id);
+  await api('/rest/v1/events?id=eq.' + encodeURIComponent(id), {
+    method: 'PATCH',
+    headers: getHeaders(true, 'return=minimal'),
+    body: JSON.stringify({ active: ev.active === false ? true : false })
+  });
+  await reloadAll();
+}
+async function deleteEvent(id) {
+  ensureAdmin();
+  if (!confirm('Ta bort denna aktivitet?')) return;
+  await api('/rest/v1/events?id=eq.' + encodeURIComponent(id), {
+    method: 'DELETE',
+    headers: getHeaders(true, 'return=minimal')
+  });
+  await reloadAll();
+}
+
+
+
+function showQueueCreateError(text) {
+  const el = document.getElementById('createQueueError');
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'status-msg show err';
+}
+function hideQueueCreateError() {
+  const el = document.getElementById('createQueueError');
+  if (!el) return;
+  el.textContent = '';
+  el.className = 'status-msg';
+}
+function populateQueueSelect() {
+  const sel = document.getElementById('adminQueueSelect');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Välj kö —</option>' + queueSessionsCache.filter(q => q.active !== false).map(q =>
+    `<option value="${q.id}">${escapeHtml(q.title)}${q.date ? ' (' + escapeHtml(q.date) + ')' : ''}</option>`
+  ).join('');
+}
+function getQueueEntriesForSession(queueId) {
+  return queueEntriesCache.filter(q => q.queue_session_id === queueId);
+}
+async function createQueueSession() {
+  ensureAdmin();
+  if (isCreatingQueue) return;
+
+  const btn = document.getElementById('createQueueBtn');
+  const title = document.getElementById('newQueueTitle').value.trim();
+  const date = document.getElementById('newQueueDate').value;
+  const time = document.getElementById('newQueueTime').value.trim();
+  const location = document.getElementById('newQueueLocation').value.trim();
+
+  hideQueueCreateError();
+  if (!title) {
+    showQueueCreateError('Ange namn på den digitala kön.');
+    return;
+  }
+
+  try {
+    isCreatingQueue = true;
+    btn.disabled = true;
+    await api('/rest/v1/queue_sessions', {
+      method: 'POST',
+      headers: getHeaders(true, 'return=minimal'),
+      body: JSON.stringify([{
+        title,
+        date: date || null,
+        time: time || null,
+        location: setQueueVolunteerVisibleInLocation(location || '', false),
+        active: true,
+        queue_open: false,
+        queue_assigned: false,
+        queue_assigned_at: null
+      }])
+    });
+    document.getElementById('newQueueTitle').value = '';
+    document.getElementById('newQueueDate').value = '';
+    document.getElementById('newQueueTime').value = '';
+    document.getElementById('newQueueLocation').value = '';
+    document.getElementById('createQueueSuccess').classList.add('show');
+    setTimeout(() => document.getElementById('createQueueSuccess').classList.remove('show'), 2500);
+    await reloadAll();
+    switchTab(3);
+  } catch (err) {
+    showQueueCreateError('Kunde inte skapa digital kö: ' + err.message);
+  } finally {
+    isCreatingQueue = false;
+    btn.disabled = false;
+  }
+}
+function renderQueueAdminPanel() {
+  const queueId = document.getElementById('adminQueueSelect')?.value;
+  const summary = document.getElementById('queueAdminSummary');
+  const list = document.getElementById('queueAdminList');
+  const linkWrap = document.getElementById('queueLinkWrap');
+  const linkBox = document.getElementById('queueLinkBox');
+  if (!summary || !list || !linkWrap || !linkBox) return;
+
+  if (!queueId) {
+    stopAdminQueuePolling();
+    summary.innerHTML = '<div class="empty-state">Ingen kö vald.</div>';
+    list.innerHTML = '<div class="empty-state">Ingen kö vald.</div>';
+    const currentNumberDisplay = document.getElementById('currentNumberDisplay');
+    const currentNumberSub = document.getElementById('currentNumberSub');
+    const nextNumberDisplay = document.getElementById('nextNumberDisplay');
+    if (currentNumberDisplay) currentNumberDisplay.textContent = '-';
+    if (nextNumberDisplay) nextNumberDisplay.textContent = '-';
+    if (currentNumberSub) currentNumberSub.textContent = 'Välj en kö för att hålla koll på aktuellt nummer.';
+    linkWrap.classList.add('hidden');
+    return;
+  }
+
+  const session = queueSessionsCache.find(q => q.id === queueId);
+  const rows = getQueueEntriesForSession(queueId);
+  updateAdminCurrentNext(queueId);
+  updateCurrentNumberDisplay();
+  const waiting = rows.filter(r => r.status === 'waiting').length;
+  const assigned = rows.filter(r => r.status === 'assigned').length;
+  const left = rows.filter(r => r.status === 'left').length;
+  const currentNumber = getCurrentQueueNumber(queueId);
+  const currentNumberDisplay = document.getElementById('currentNumberDisplay');
+  const currentNumberSub = document.getElementById('currentNumberSub');
+  if (currentNumberDisplay) currentNumberDisplay.textContent = currentNumber || '-';
+  if (currentNumberSub) currentNumberSub.textContent = currentNumber ? ('Ni ropar upp nummer ' + currentNumber + ' just nu.') : 'Sätt vilket nummer ni ropar upp just nu.';
+
+  summary.innerHTML = `
+    <div style="font-weight:900;margin-bottom:6px;">${escapeHtml(session.title)}</div>
+    <div style="font-size:13px;color:#6b7280;line-height:1.5;">
+      Status: <strong>${session.queue_open ? 'Öppen' : 'Stängd'}</strong><br>
+      Väntar: <strong>${waiting}</strong> · Fått köplats: <strong>${assigned}</strong> · Lämnat kön: <strong>${left}</strong>
+    </div>
+    <div class="queue-summary">
+      <div class="queue-summary-card"><div class="queue-summary-label">Totalt i kön</div><div class="queue-summary-value">${rows.length}</div></div>
+      <div class="queue-summary-card"><div class="queue-summary-label">Väntar</div><div class="queue-summary-value">${waiting}</div></div>
+      <div class="queue-summary-card"><div class="queue-summary-label">Köplats</div><div class="queue-summary-value">${assigned}</div></div>
+      <div class="queue-summary-card"><div class="queue-summary-label">Lämnat kön</div><div class="queue-summary-value">${left}</div></div>
+    </div>
+    <div class="volunteer-toggle-box">
+      <div class="volunteer-toggle-title">Kövisning för volontärer</div>
+      <div class="volunteer-toggle-row">
+        <div class="volunteer-toggle-status">
+          ${isVolunteerQueueVisible(session) ? 'Visas för volontärer' : 'Dold för volontärer'}
+        </div>
+        <button
+          class="mini-btn volunteer-toggle-btn ${isVolunteerQueueVisible(session) ? 'visible' : 'hidden-state'}"
+          type="button"
+          onclick="toggleVolunteerQueueVisibility()">
+          ${isVolunteerQueueVisible(session) ? 'Dölj köinfo för volontärer' : 'Visa köinfo för volontärer'}
+        </button>
+      </div>
+    </div>
+  `;
+  linkWrap.classList.remove('hidden');
+  linkBox.textContent = getQueueLink(queueId);
+
+  if (!rows.length) {
+    list.innerHTML = '<div class="empty-state">Ingen står i kön ännu.</div>';
+    return;
+  }
+
+  const sorted = rows.slice().sort((a,b) => {
+    const ax = a.queue_number == null ? 9999 : a.queue_number;
+    const bx = b.queue_number == null ? 9999 : b.queue_number;
+    if (ax !== bx) return ax - bx;
+    return new Date(a.joined_at) - new Date(b.joined_at);
+  });
+
+  list.innerHTML = sorted.map(row => `
+    <div class="queue-row">
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:800;">${escapeHtml(row.display_name || 'Deltagare')}</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:3px;">Kom i kö: ${sorted.findIndex(x => x.id === row.id) + 1} · ${row.has_mobile ? 'Mobil' : 'Utan mobil'} · Registrerad ${new Date(row.joined_at).toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div class="queue-chip ${row.status === 'assigned' ? 'assigned' : row.status === 'left' ? 'left' : ''}">
+          ${row.status === 'assigned' ? 'Köplats ' + row.queue_number : row.status === 'left' ? 'Lämnat kön' : 'Väntar'}
+        </div>
+        <button class="small-btn delete" type="button" onclick="removeQueuePerson('${row.id}')">Ta bort</button>
+      </div>
+    </div>
+  `).join('');
+}
+async function openQueue() {
+  ensureAdmin();
+  const queueId = document.getElementById('adminQueueSelect')?.value;
+  if (!queueId) { alert('Välj en kö först.'); return; }
+  await api('/rest/v1/queue_sessions?id=eq.' + encodeURIComponent(queueId), {
+    method: 'PATCH',
+    headers: getHeaders(true, 'return=minimal'),
+    body: JSON.stringify({ queue_open: true })
+  });
+  await reloadAll();
+  renderQueueAdminPanel();
+}
+async function closeQueue() {
+  ensureAdmin();
+  const queueId = document.getElementById('adminQueueSelect')?.value;
+  if (!queueId) { alert('Välj en kö först.'); return; }
+  await api('/rest/v1/queue_sessions?id=eq.' + encodeURIComponent(queueId), {
+    method: 'PATCH',
+    headers: getHeaders(true, 'return=minimal'),
+    body: JSON.stringify({ queue_open: false })
+  });
+  await reloadAll();
+  renderQueueAdminPanel();
+}
+async function addManualQueueEntry() {
+  ensureAdmin();
+  const queueId = document.getElementById('adminQueueSelect')?.value;
+  if (!queueId) { alert('Välj en kö först.'); return; }
+  const name = prompt('Skriv ett namn eller en etikett för personen utan mobil:', 'Utan mobil');
+  if (!name) return;
+  await api('/rest/v1/queue_entries', {
+    method: 'POST',
+    headers: getHeaders(true, 'return=representation'),
+    body: JSON.stringify([{
+      queue_session_id: queueId,
+      display_name: name.trim(),
+      has_mobile: false,
+      status: 'waiting'
+    }])
+  });
+  await reloadAll();
+  renderQueueAdminPanel();
+}
+async function assignQueueNumbers() {
+  ensureAdmin();
+  const queueId = document.getElementById('adminQueueSelect')?.value;
+  if (!queueId) { alert('Välj en kö först.'); return; }
+
+  const waiting = getQueueEntriesForSession(queueId)
+    .filter(r => r.status === 'waiting')
+    .slice();
+
+  if (!waiting.length) { alert('Det finns inga väntande personer att tilldela.'); return; }
+  if (!confirm('Slumpa köplatser för alla som väntar i kön?')) return;
+
+  const existing = getQueueEntriesForSession(queueId).filter(r => r.queue_number != null);
+  const maxExisting = existing.length ? Math.max(...existing.map(r => Number(r.queue_number) || 0)) : 0;
+
+  // Slumpa PERSON-ordningen starkt med Web Crypto och tilldela sedan sekventiella nummer
+  for (let i = waiting.length - 1; i > 0; i--) {
+    const arr = new Uint32Array(1);
+    crypto.getRandomValues(arr);
+    const j = arr[0] % (i + 1);
+    [waiting[i], waiting[j]] = [waiting[j], waiting[i]];
+  }
+
+  try {
+    for (let i = 0; i < waiting.length; i++) {
+      await api('/rest/v1/queue_entries?id=eq.' + encodeURIComponent(waiting[i].id), {
+        method: 'PATCH',
+        headers: getHeaders(true, 'return=minimal'),
+        body: JSON.stringify({
+          queue_number: maxExisting + i + 1,
+          assigned_at: new Date().toISOString(),
+          status: 'assigned'
+        })
+      });
+    }
+
+    await api('/rest/v1/queue_sessions?id=eq.' + encodeURIComponent(queueId), {
+      method: 'PATCH',
+      headers: getHeaders(true, 'return=minimal'),
+      body: JSON.stringify({
+        queue_assigned: true,
+        queue_assigned_at: new Date().toISOString()
+      })
+    });
+
+    await reloadAll();
+    renderQueueAdminPanel();
+    alert('Köplatserna har slumpats fram.');
+  } catch (err) {
+    alert('Kunde inte slumpa köplatser: ' + err.message);
+  }
+}
+async function removeQueuePerson(id) {
+  ensureAdmin();
+  if (!confirm('Ta bort denna person från kön?')) return;
+  await api('/rest/v1/queue_entries?id=eq.' + encodeURIComponent(id), {
+    method: 'DELETE',
+    headers: getHeaders(true, 'return=minimal')
+  });
+  await reloadAll();
+  renderQueueAdminPanel();
+}
+async function clearQueueSession() {
+  ensureAdmin();
+  const queueId = document.getElementById('adminQueueSelect')?.value;
+  if (!queueId) { alert('Välj en kö först.'); return; }
+  if (!confirm('Rensa hela kön?')) return;
+  await api('/rest/v1/queue_entries?queue_session_id=eq.' + encodeURIComponent(queueId), {
+    method: 'DELETE',
+    headers: getHeaders(true, 'return=minimal')
+  });
+  await api('/rest/v1/queue_sessions?id=eq.' + encodeURIComponent(queueId), {
+    method: 'PATCH',
+    headers: getHeaders(true, 'return=minimal'),
+    body: JSON.stringify({ queue_open: false, queue_assigned: false, queue_assigned_at: null })
+  });
+  removeQueueEntry(queueId);
+  await reloadAll();
+  renderQueueAdminPanel();
+}
+async function joinQueue() {
+  const queueId = getQueueIdFromUrl();
+  const session = queueSessionsCache.find(q => q.id === queueId);
+  const statusEl = document.getElementById('queuePublicStatus');
+  const joinBtn = document.getElementById('queueJoinBtn');
+  const name = document.getElementById('queueNameInput')?.value?.trim() || '';
+
+  if (!session) {
+    if (statusEl) {
+      statusEl.textContent = 'Kön kunde inte hittas.';
+      statusEl.className = 'status-msg show err';
+    }
+    return;
+  }
+  if (!session.queue_open || isJoiningQueue) return;
+
+  const existingLocalEntryId = getQueueEntry(queueId);
+  const existingLocalEntry = queueEntriesCache.find(q =>
+    q.id === existingLocalEntryId &&
+    q.queue_session_id === queueId &&
+    q.status !== 'left'
+  );
+  if (existingLocalEntry) {
+    await reloadAll();
+    renderQueueView();
+forceQueueHelperTextSafe();
+if (typeof applyTranslations==='function'){applyTranslations();}
+    return;
+  }
+
+  try {
+    isJoiningQueue = true;
+    if (joinBtn) joinBtn.disabled = true;
+
+    const rows = await api('/rest/v1/queue_entries', {
+      method: 'POST',
+      headers: getHeaders(false, 'return=representation'),
+      body: JSON.stringify([{
+        queue_session_id: queueId,
+        display_name: name || 'Deltagare',
+        has_mobile: true,
+        status: 'waiting'
+      }])
+    });
+
+    const created = Array.isArray(rows) ? rows[0] : rows;
+    if (created?.id) setQueueEntry(queueId, created.id);
+    await reloadAll();
+    renderQueueView();
+forceQueueHelperTextSafe();
+if (typeof applyTranslations==='function'){applyTranslations();}
+  } catch (err) {
+    if (statusEl) {
+      statusEl.textContent = 'Kunde inte ställa dig i kön: ' + err.message;
+      statusEl.className = 'status-msg show err';
+    }
+  } finally {
+    isJoiningQueue = false;
+    if (joinBtn) joinBtn.disabled = false;
+  }
+}
+async function leaveQueue() {
+  const queueId = getQueueIdFromUrl();
+  const entryId = getQueueEntry(queueId);
+  if (!entryId) return;
+  await api('/rest/v1/queue_entries?id=eq.' + encodeURIComponent(entryId), {
+    method: 'PATCH',
+    headers: getHeaders(false, 'return=minimal'),
+    body: JSON.stringify({ status: 'left' })
+  });
+  removeQueueEntry(queueId);
+  await reloadAll();
+}
+function renderQueueView() {
+  try {
+    const savedLang = localStorage.getItem(QUEUE_LANG_KEY);
+    if (savedLang && QUEUE_I18N[savedLang]) currentQueueLang = savedLang;
+  } catch (e) {}
+  document.body.classList.add('queue-public-mode');
+  const queueId = getQueueIdFromUrl();
+  const session = queueSessionsCache.find(q => q.id === queueId);
+  const entryId = getQueueEntry(queueId);
+  const entry = queueEntriesCache.find(q => q.id === entryId && q.queue_session_id === queueId);
+
+  const firstCard = document.querySelector('.card:not(#queueCard)');
+  if (firstCard) firstCard.classList.add('hidden');
+  document.querySelectorAll('.admin-row').forEach(x => x.classList.add('hidden'));
+  document.getElementById('adminPanel')?.classList.add('hidden');
+  document.getElementById('queueCard')?.classList.remove('hidden');
+  startQueuePolling();
+
+  const title = document.getElementById('queueTitle');
+  const status = document.getElementById('queueStatusText');
+  const big = document.getElementById('queueBigNumber');
+  const leaveBtn = document.getElementById('queueLeaveBtn');
+  const nameWrap = document.getElementById('queueNameWrap');
+  const joinBtn = document.getElementById('queueJoinBtn');
+  const publicStatus = document.getElementById('queuePublicStatus');
+  const helperTitleEl = document.getElementById('queueHelperTitle');
+  const helperTextEl = document.getElementById('queueHelperText');
+
+  applyQueueLanguageStatic();
+  forceQueueHelperTextSafe();
+  updatePublicCalledNumber();
+  updateUserTurnNotification(entry);
+  if (publicStatus) {
+    publicStatus.textContent = '';
+    publicStatus.className = 'status-msg';
+  }
+
+  if (!session) {
+    if (title) title.textContent = tQueue('queue_label');
+    if (status) status.textContent = tQueue('not_found');
+    if (big) big.classList.add('hidden');
+    if (leaveBtn) leaveBtn.classList.add('hidden');
+    if (joinBtn) joinBtn.classList.add('hidden');
+    updatePublicCalledNumber();
+    updateUserTurnNotification(entry);
+    return;
+  }
+
+  if (title) title.textContent = translateQueueTitle(session.title) + (session.date ? ' · ' + session.date : '');
+
+  if (!entry) {
+    if (big) big.classList.add('hidden');
+    if (leaveBtn) leaveBtn.classList.add('hidden');
+    if (nameWrap) nameWrap.classList.remove('hidden');
+    if (joinBtn) {
+      joinBtn.classList.remove('hidden');
+      joinBtn.disabled = !session.queue_open;
+      joinBtn.textContent = session.queue_open ? tQueue('join') : tQueue('queue_soon');
+    }
+    if (helperTitleEl) {
+      helperTitleEl.dataset.state = 'default';
+      helperTitleEl.textContent = queueSafeText('howto_title');
+    }
+    if (helperTextEl) {
+      helperTextEl.innerHTML = queueSafeText('howto_steps');
+    }
+    if (status) status.textContent = session.queue_open ? tQueue('wait_msg') : tQueue('closed_msg');
+    updatePublicCalledNumber();
+    updateUserTurnNotification(null);
+    return;
+  }
+
+  if (nameWrap) nameWrap.classList.add('hidden');
+  if (leaveBtn) leaveBtn.classList.remove('hidden');
+
+  if (entry.status === 'left') {
+    if (helperTitleEl) {
+      helperTitleEl.dataset.state = 'left';
+      helperTitleEl.textContent = tQueue('left_title');
+    }
+    if (helperTextEl) helperTextEl.innerHTML = tQueue('left_text');
+    if (status) status.textContent = tQueue('left_status');
+    if (big) big.classList.add('hidden');
+    if (leaveBtn) leaveBtn.classList.add('hidden');
+    if (joinBtn) joinBtn.classList.add('hidden');
+    updatePublicCalledNumber();
+    updateUserTurnNotification(entry);
+    return;
+  }
+
+  if (entry.queue_number != null) {
+    if (helperTitleEl) {
+      helperTitleEl.dataset.state = 'assigned';
+      helperTitleEl.textContent = tQueue('got_number_title');
+    }
+    if (helperTextEl) helperTextEl.innerHTML = tQueue('got_number_text');
+    if (status) status.textContent = tQueue('queue_number');
+    if (big) {
+      big.textContent = entry.queue_number;
+      big.classList.remove('hidden');
+    }
+    if (joinBtn) joinBtn.classList.add('hidden');
+    updatePublicCalledNumber();
+    updateUserTurnNotification(entry);
+    return;
+  }
+
+  if (helperTitleEl) {
+    helperTitleEl.dataset.state = 'waiting';
+    helperTitleEl.textContent = tQueue('already_title');
+  }
+  if (helperTextEl) helperTextEl.innerHTML = tQueue('already_text');
+  if (status) status.textContent = tQueue('waiting_status');
+  if (big) big.classList.add('hidden');
+  if (joinBtn) joinBtn.classList.add('hidden');
+  updatePublicCalledNumber();
+  updateUserTurnNotification(entry);
+}
+
+async function resetQueueAssignments() {
+  ensureAdmin();
+  const queueId = document.getElementById('adminQueueSelect')?.value;
+  if (!queueId) { alert('Välj en kö först.'); return; }
+  if (!confirm('Nollställ alla köplatser så att alla återgår till väntar i kön?')) return;
+
+  const rows = getQueueEntriesForSession(queueId).filter(r => r.status !== 'left');
+  try {
+    for (const row of rows) {
+      await api('/rest/v1/queue_entries?id=eq.' + encodeURIComponent(row.id), {
+        method: 'PATCH',
+        headers: getHeaders(true, 'return=minimal'),
+        body: JSON.stringify({
+          queue_number: null,
+          assigned_at: null,
+          status: 'waiting'
+        })
+      });
+    }
+
+    await api('/rest/v1/queue_sessions?id=eq.' + encodeURIComponent(queueId), {
+      method: 'PATCH',
+      headers: getHeaders(true, 'return=minimal'),
+      body: JSON.stringify({
+        queue_assigned: false,
+        queue_assigned_at: null
+      })
+    });
+
+    await reloadAll();
+    renderQueueAdminPanel();
+    alert('Alla köplatser har nollställts.');
+  } catch (err) {
+    alert('Kunde inte nollställa köplatser: ' + err.message);
+  }
+}
+
+async function init() {
+  try {
+    await reloadAll();
+    restoreVolunteerName();
+    refreshSignupButton();
+    restoreAdminSession();
+    applyQueueLanguageStatic();
+    updateCurrentNumberDisplay();
+    if (isQueueMode()) {
+      renderQueueView();
+forceQueueHelperTextSafe();
+if (typeof applyTranslations==='function'){applyTranslations();}
+      startQueuePolling();
+      startPublicQueueLiveRefresh();
+    } else {
+      stopQueuePolling();
+    }
+    renderCreatePickupOptions();
+  } catch (err) {
+    document.getElementById('eventsList').innerHTML = '<div class="empty-state">Kunde inte ladda data.<br>' + escapeHtml(err.message) + '</div>';
+  }
+}
+
+function setViewTag(text) {
+  const el = document.getElementById('currentViewTag');
+  if (el) el.textContent = text;
+}
+
+function setTopCopy(title, sub) {
+  const h1 = document.getElementById('mainPageTitle');
+  const subEl = document.getElementById('uxTopSub');
+  if (h1) h1.textContent = title;
+  if (subEl) subEl.textContent = sub;
+}
+
+function setUxActive(which) {
+  const volunteerBtn = document.getElementById('uxBtnVolunteer');
+  if (volunteerBtn) {
+    volunteerBtn.style.opacity = which === 'volunteer' ? '1' : '0.92';
+  }
+  document.getElementById('uxBtnAdmin')?.classList.toggle('active', which === 'admin');
+  document.getElementById('uxBtnQueue')?.classList.toggle('active', which === 'queue');
+}
+
+function hideEl(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('hidden');
+}
+function showEl(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('hidden');
+}
+
+function showVolunteerView() {
+  if (typeof isQueueMode === 'function' && isQueueMode()) return;
+  setUxActive('volunteer');
+  setTopCopy('Volontär', 'Anmäl dig till matutdelning eller hämtning.');
+  setViewTag('Volontärläge');
+  showEl('volunteerCard');
+  showEl('cancelEntryRow');
+  hideEl('cancelCard');
+  showEl('adminEntryRow');
+  hideEl('adminPanel');
+  hideEl('queueCard');
+  if (typeof updateVolunteerQueueOverview === 'function') updateVolunteerQueueOverview();
+  stopAdminQueueAutoRefresh();
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+function showAdminDashboard() {
+  if (typeof isQueueMode === 'function' && isQueueMode()) return;
+  setUxActive('admin');
+  setTopCopy('Admin', 'Hantera aktiviteter och anmälningar.');
+  setViewTag('Adminläge');
+  hideEl('volunteerCard');
+  hideEl('cancelEntryRow');
+  hideEl('cancelCard');
+  hideEl('queueCard');
+  showEl('adminEntryRow');
+  showEl('adminPanel');
+  const panel = document.getElementById('adminPanel');
+  if (panel) panel.classList.add('show');
+  if (typeof switchTab === 'function') switchTab(0);
+  stopAdminQueueAutoRefresh();
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+function showQueueDashboard() {
+  if (typeof isQueueMode === 'function' && isQueueMode()) return;
+  setUxActive('queue');
+  setTopCopy('Köhantering', 'Hantera kö, upprop och sena ankomster.');
+  setViewTag('Admin – Digital kö');
+  hideEl('volunteerCard');
+  hideEl('cancelEntryRow');
+  hideEl('cancelCard');
+  hideEl('queueCard');
+  showEl('adminEntryRow');
+  showEl('adminPanel');
+  const panel = document.getElementById('adminPanel');
+  if (panel) panel.classList.add('show');
+  if (typeof switchTab === 'function') switchTab(3);
+  startAdminQueueAutoRefresh();
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+if (!(typeof isQueueMode === 'function' && isQueueMode())) { document.body.classList.remove('queue-public-mode'); }
+
+let appAutoRefreshTimer = null;
+
+function stopAppAutoRefresh() {
+  return;
+}
+
+function refreshCurrentViewSilently() {
+  if (typeof isQueueMode === 'function' && isQueueMode()) return;
+  if (typeof document === 'undefined' || document.hidden) return;
+
+  reloadAll()
+    .then(() => {
+      // Admin / Köhantering
+      const adminPanel = document.getElementById('adminPanel');
+      const adminVisible = adminPanel && adminPanel.classList.contains('show') && !adminPanel.classList.contains('hidden');
+
+      if (adminVisible) {
+        if (typeof renderQueueAdminPanel === 'function') renderQueueAdminPanel();
+        if (typeof renderMgmt === 'function') renderMgmt();
+        if (typeof renderSignupsAdmin === 'function') renderSignupsAdmin();
+        return;
+      }
+
+      // Volontär
+      if (typeof renderEvents === 'function') renderEvents();
+      if (typeof populateCancelSelect === 'function') populateCancelSelect();
+      if (typeof renderCancelOptions === 'function') renderCancelOptions();
+      if (typeof refreshSignupButton === 'function') refreshSignupButton();
+    })
+    .catch(() => {});
+}
+
+function startAppAutoRefresh() {
+  // Replaced by Supabase Realtime
+  return;
+}
+
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) {
+    stopAppAutoRefresh();
+  } else {
+    startAppAutoRefresh();
+    refreshCurrentViewSilently();
+  }
+});
+
+
+function forceHelperDefaultText() {
+  const helperTitle = document.getElementById('queueHelperTitle');
+  const helperText = document.getElementById('queueHelperText');
+  if (!helperTitle || !helperText) return;
+
+  const state = (helperTitle.dataset && helperTitle.dataset.state) || 'default';
+  if (state === 'default') {
+    helperTitle.textContent = queueSafeText('howto_title');
+    helperText.innerHTML = queueSafeText('howto_steps');
+  }
+}
+
+
+const sbRealtime = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+let realtimeChannels = [];
+let realtimeRefreshTimer = null;
+
+function clearRealtimeChannels() {
+  if (!sbRealtime || !realtimeChannels.length) return;
+  realtimeChannels.forEach(ch => {
+    try { sbRealtime.removeChannel(ch); } catch (e) {}
+  });
+  realtimeChannels = [];
+}
+
+function scheduleRealtimeRefresh() {
+  if (realtimeRefreshTimer) clearTimeout(realtimeRefreshTimer);
+
+  realtimeRefreshTimer = setTimeout(async () => {
+    try {
+      await reloadAll();
+
+      if (typeof isQueueMode === 'function' && isQueueMode()) {
+        if (typeof renderQueueView === 'function') renderQueueView();
+forceQueueHelperTextSafe();
+if (typeof applyTranslations==='function'){applyTranslations();}
+        if (typeof applyQueueLanguageStatic === 'function') applyQueueLanguageStatic();
+        return;
+      }
+
+      const adminPanel = document.getElementById('adminPanel');
+      const adminVisible = adminPanel && adminPanel.classList.contains('show') && !adminPanel.classList.contains('hidden');
+
+      if (adminVisible) {
+        if (typeof renderQueueAdminPanel === 'function') renderQueueAdminPanel();
+      } else {
+        if (typeof refreshSignupButton === 'function') refreshSignupButton();
+        if (typeof populateCancelSelect === 'function') populateCancelSelect();
+        if (typeof renderCancelOptions === 'function') renderCancelOptions();
+      }
+    } catch (e) {
+      console.error('Realtime refresh error', e);
+    }
+  }, 180);
+}
+
+function createRealtimeChannel(name, table, filter) {
+  if (!sbRealtime) return null;
+  let cfg = { event: '*', schema: 'public', table };
+  if (filter) cfg.filter = filter;
+
+  const channel = sbRealtime
+    .channel(name)
+    .on('postgres_changes', cfg, () => {
+      scheduleRealtimeRefresh();
+    })
+    .subscribe((status) => {
+      console.log('Realtime', name, status);
+    });
+
+  realtimeChannels.push(channel);
+  return channel;
+}
+
+function startRealtimeSubscriptions() {
+  if (!sbRealtime) return;
+
+  clearRealtimeChannels();
+
+  // Public queue page: only subscribe to the active queue
+  if (typeof isQueueMode === 'function' && isQueueMode()) {
+    const queueId = getQueueIdFromUrl();
+    if (queueId) {
+      createRealtimeChannel('rt-queue-session-' + queueId, 'queue_sessions', 'id=eq.' + queueId);
+      createRealtimeChannel('rt-queue-entries-' + queueId, 'queue_entries', 'queue_session_id=eq.' + queueId);
+    }
+    return;
+  }
+
+  // Main app
+  createRealtimeChannel('rt-events', 'events');
+  createRealtimeChannel('rt-signups', 'signups');
+  createRealtimeChannel('rt-queue-sessions', 'queue_sessions');
+  createRealtimeChannel('rt-queue-entries', 'queue_entries');
+}
+
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) {
+    clearRealtimeChannels();
+    stopPublicQueueLiveRefresh();
+    stopAdminQueueAutoRefresh();
+  } else {
+    startRealtimeSubscriptions();
+    scheduleRealtimeRefresh();
+    if (isQueueMode()) {
+      startPublicQueueLiveRefresh();
+      loadQueueSessions().then(loadQueueEntries).then(renderQueueView).catch(() => {});
+    } else {
+      startAdminQueueAutoRefresh();
+    }
+  }
+});
+
+init();
+startRealtimeSubscriptions();
+startAppAutoRefresh();
+showVolunteerView();
+</script>
+</body>
+</html>
