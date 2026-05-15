@@ -557,7 +557,7 @@
     <div class="org-name">Medmänniska Sverige</div>
     <h1 id="mainPageTitle">Volontär</h1>
 <img src="logo.png" class="logo">
-    <div class="version">Version D15.0.7 – volunteer agreement restored</div>
+    <div class="version">Version D15.0.8 – confirmation and export</div>
   
   <div id="uxTopNav" class="ux-top-nav volunteer-first-nav">
     <button class="ux-selected-pill" id="uxBtnVolunteer" type="button" onclick="showVolunteerView()">Volontär</button>
@@ -762,6 +762,7 @@
           <div class="section-label">Välj aktivitet</div>
           <select id="adminEventSelect" onchange="renderSignupAdminList()"><option value="">— Välj aktivitet —</option></select>
         </div>
+        <button class="mini-btn active" type="button" id="exportSignupsBtn" onclick="exportSelectedActivitySignups()" style="width:100%;margin:0 0 12px;padding:12px;font-size:13px;">⬇️ Exportera volontärlista</button>
         <div id="adminSignupList"><div class="empty-state">Ingen aktivitet vald.</div></div>
       </div>
 
@@ -1086,7 +1087,7 @@ const QUEUE_I18N = {
     queue_label: 'Digital kö',
     language_label: 'Välj språk',
     page_title: 'Digital kö',
-    page_version: 'Version D15.0.7 – volunteer agreement restored<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer',
+    page_version: 'Version D15.0.8 – confirmation and export<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer',
     name_label: 'Ditt namn (valfritt)',
     name_placeholder: 'Skriv ditt namn om du vill',
     join: 'Gå med i kön',
@@ -1126,7 +1127,7 @@ const QUEUE_I18N = {
     queue_label: 'Digital queue',
     language_label: 'Choose language',
     page_title: 'Digital queue',
-    page_version: 'Version D15.0.7 – volunteer agreement restored<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number',
+    page_version: 'Version D15.0.8 – confirmation and export<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number',
     name_label: 'Your name (optional)',
     name_placeholder: 'Enter your name if you want',
     join: 'Join the queue',
@@ -2351,7 +2352,7 @@ async function submitSignup() {
       }
 
       document.getElementById('confirmBadge').textContent = ev.day_name + ' – ' + ev.date;
-      document.getElementById('confirmMsg').textContent = 'Tack! Din anmälan är nu registrerad.';
+      document.getElementById('confirmMsg').textContent = 'Tack! Din anmälan är nu registrerad. Du kommer att få en slutlig bekräftelse på dagen för matutdelningen om du ska delta denna gång.';
       document.getElementById('confirmTitle').textContent = 'Du är anmäld!';
     }
 
@@ -2515,9 +2516,84 @@ function populateAdminEventSelect() {
     `<option value="${ev.id}">${escapeHtml(ev.day_name)} ${escapeHtml(ev.date)} · ${isPickupEvent(ev) ? 'Hämtning' : 'Matutdelning'}</option>`
   ).join('');
 }
+
+function csvEscape(value) {
+  const text = String(value ?? '');
+  return '"' + text.replace(/"/g, '""') + '"';
+}
+
+function exportSelectedActivitySignups() {
+  ensureAdmin();
+
+  const eventId = document.getElementById('adminEventSelect')?.value;
+  if (!eventId) {
+    alert('Välj en aktivitet först.');
+    return;
+  }
+
+  const ev = eventsCache.find(e => e.id === eventId);
+  if (!ev) {
+    alert('Aktiviteten kunde inte hittas.');
+    return;
+  }
+
+  const rows = signupsCache.filter(s => s.event_id === eventId);
+  if (!rows.length) {
+    alert('Det finns inga anmälningar att exportera för denna aktivitet.');
+    return;
+  }
+
+  const isPickup = isPickupEvent(ev);
+  const header = [
+    'Aktivitet',
+    'Typ',
+    'Datum',
+    'Tid',
+    'Plats',
+    'Volontär',
+    'Status',
+    'Hämtställen',
+    'Anmäld'
+  ];
+
+  const csvRows = [header];
+
+  rows.forEach(row => {
+    const locations = Array.isArray(row.selected_locations) ? row.selected_locations.join(' | ') : '';
+    csvRows.push([
+      ev.day_name || '',
+      isPickup ? 'Hämtning' : 'Matutdelning',
+      ev.date || '',
+      ev.time || '',
+      ev.location || '',
+      row.name || '',
+      row.is_waitlist ? 'Reserv' : 'Anmäld',
+      locations,
+      row.created_at || ''
+    ]);
+  });
+
+  const csvContent = csvRows
+    .map(r => r.map(csvEscape).join(';'))
+    .join('\n');
+
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const safeName = String(ev.day_name || 'aktivitet').replace(/[^\wåäöÅÄÖ-]+/g, '_');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'volontarer_' + safeName + '_' + String(ev.date || '').replaceAll('-', '') + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 function renderSignupAdminList() {
   const eventId = document.getElementById('adminEventSelect')?.value;
   const el = document.getElementById('adminSignupList');
+  const exportBtn = document.getElementById('exportSignupsBtn');
+  if (exportBtn) exportBtn.disabled = !eventId;
   if (!el) return;
 
   if (!eventId) {
