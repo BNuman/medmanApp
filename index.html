@@ -523,26 +523,34 @@
 }
 
 
-.agreement-box{
-  margin:14px 0 4px;
-  background:#fff8f7;
-  border:1px solid rgba(229,57,53,.16);
-  border-radius:18px;
-  padding:14px;
+.history-card{
+  border:2px solid #d1e8da;
+  border-radius:16px;
+  background:#f9fafb;
+  padding:12px;
+  margin-bottom:10px;
 }
-.agreement-label{
-  display:flex;
-  align-items:flex-start;
-  gap:12px;
-  font-size:14px;
-  line-height:1.5;
-  color:#374151;
-  font-weight:800;
+.history-title{
+  font-weight:900;
+  font-size:15px;
+  color:#1f2937;
 }
-.agreement-label input{
+.history-sub{
+  font-size:12px;
+  color:#6b7280;
+  font-weight:700;
   margin-top:4px;
-  transform:scale(1.2);
-  flex:0 0 auto;
+  line-height:1.45;
+}
+.history-pill{
+  display:inline-block;
+  margin-top:8px;
+  padding:5px 9px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:900;
+  background:#FCE9E7;
+  color:#E53935;
 }
 
 </style>
@@ -557,7 +565,7 @@
     <div class="org-name">Medmänniska Sverige</div>
     <h1 id="mainPageTitle">Volontär</h1>
 <img src="logo.png" class="logo">
-    <div class="version">Version D15.0.8 – confirmation and export</div>
+    <div class="version">Version D15.1.0 – admin history</div>
   
   <div id="uxTopNav" class="ux-top-nav volunteer-first-nav">
     <button class="ux-selected-pill" id="uxBtnVolunteer" type="button" onclick="showVolunteerView()">Volontär</button>
@@ -646,18 +654,6 @@
       <div id="eventsList"></div>
       </div>
       
-
-      <div id="volunteerAgreementWrap" class="agreement-box hidden">
-        <label class="agreement-label">
-          <input type="checkbox" id="volunteerAgreementCheckbox" onchange="refreshSignupButton()">
-          <span>
-            Jag är medveten om att all mat och alla donationer är till för människor i behov.
-            Som volontär ansvarar jag för att donationerna hanteras rättvist, respektfullt
-            och enligt organisationens riktlinjer.
-          </span>
-        </label>
-      </div>
-
       <div id="publicStatus" class="status-msg"></div>
       <div class="sticky-cta" id="joinButtonWrap"><button class="submit-btn" type="button" id="signupBtn" onclick="submitSignup()" disabled>Fyll i namn först</button></div>
     </div>
@@ -718,6 +714,7 @@
         <button class="atab" type="button" id="tabBtn1" onclick="switchTab(1)">📅 Hantera</button>
         <button class="atab" type="button" id="tabBtn2" onclick="switchTab(2)">📋 Anmälningar</button>
         <button class="atab" type="button" id="tabBtn3" onclick="switchTab(3)">🎟️ Digital kö</button>
+        <button class="atab" type="button" id="tabBtn4" onclick="switchTab(4)">🕘 Historik</button>
       </div>
 
       <div id="tab0">
@@ -762,7 +759,6 @@
           <div class="section-label">Välj aktivitet</div>
           <select id="adminEventSelect" onchange="renderSignupAdminList()"><option value="">— Välj aktivitet —</option></select>
         </div>
-        <button class="mini-btn active" type="button" id="exportSignupsBtn" onclick="exportSelectedActivitySignups()" style="width:100%;margin:0 0 12px;padding:12px;font-size:13px;">⬇️ Exportera volontärlista</button>
         <div id="adminSignupList"><div class="empty-state">Ingen aktivitet vald.</div></div>
       </div>
 
@@ -840,6 +836,14 @@
         <div id="queueAdminList" style="margin-top:12px;"><div class="empty-state">Ingen kö vald.</div></div>
       </div>
 
+      <div id="tab4" class="hidden">
+        <div class="section-label">Historik</div>
+        <div class="helper-box">
+          Här visas volontärer och hämtningar som sparats i historiken när en aktivitet tas bort.
+        </div>
+        <div id="volunteerHistoryList"><div class="empty-state">Ingen historik ännu.</div></div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -851,26 +855,18 @@ const ADMIN_SESSION_KEY = 'hf_admin_session_v3';
 const VOLUNTEER_NAME_KEY = 'hf_volunteer_name_v3';
 const QUEUE_ENTRY_KEY = 'hf_queue_entry_map_v4';
 const PICKUP_LOCATIONS = [
-  "Delta i hämtning – bil eller körkort behövs inte",
   "Brogyllen Landala","Hemköp Guldheden","Willys Sten Sturegatan","Willys Heden","Willys Sten Sturegatan och Heden","Willys Majorna",
   "Dahls Sisjön","Willys Påvelund","Willys Kaverös","Willys Tuve","Willys Hemma Torslanda",
   "Willys Torslanda","SockerMajas Torslanda","Restaurang Kalimera Torslanda"
 ];
 
 
-const MULTI_BOOKABLE_PICKUP_OPTIONS = [
-  "Delta i hämtning – bil eller körkort behövs inte"
-];
-
-function isMultiBookablePickupLocation(loc) {
-  return MULTI_BOOKABLE_PICKUP_OPTIONS.includes(String(loc || '').trim());
-}
-
 let adminSession = JSON.parse(localStorage.getItem(ADMIN_SESSION_KEY) || 'null');
 let eventsCache = [];
 let signupsCache = [];
 let queueSessionsCache = [];
 let queueEntriesCache = [];
+let volunteerHistoryCache = [];
 let isCreatingQueue = false;
 let isJoiningQueue = false;
 let queuePollTimer = null;
@@ -1087,7 +1083,7 @@ const QUEUE_I18N = {
     queue_label: 'Digital kö',
     language_label: 'Välj språk',
     page_title: 'Digital kö',
-    page_version: 'Version D15.0.8 – confirmation and export<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer',
+    page_version: 'Version D15.1.0 – admin history<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer',
     name_label: 'Ditt namn (valfritt)',
     name_placeholder: 'Skriv ditt namn om du vill',
     join: 'Gå med i kön',
@@ -1127,7 +1123,7 @@ const QUEUE_I18N = {
     queue_label: 'Digital queue',
     language_label: 'Choose language',
     page_title: 'Digital queue',
-    page_version: 'Version D15.0.8 – confirmation and export<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number',
+    page_version: 'Version D15.1.0 – admin history<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number',
     name_label: 'Your name (optional)',
     name_placeholder: 'Enter your name if you want',
     join: 'Join the queue',
@@ -1924,12 +1920,20 @@ async function loadQueueSessions() {
 async function loadQueueEntries() {
   queueEntriesCache = await api('/rest/v1/queue_entries?select=*&order=joined_at.asc');
 }
+async function loadVolunteerHistory() {
+  try {
+    volunteerHistoryCache = await api('/rest/v1/volunteer_history?select=*&order=archived_at.desc');
+  } catch (e) {
+    volunteerHistoryCache = [];
+    console.warn('Volunteer history could not be loaded. Has the SQL table been created?', e);
+  }
+}
 async function reloadAll() {
   const selectedAdminEvent = document.getElementById('adminEventSelect')?.value || '';
   const selectedCancelEvent = document.getElementById('cancelEventSelect')?.value || '';
   const selectedQueue = document.getElementById('adminQueueSelect')?.value || '';
 
-  await Promise.all([loadEvents(), loadSignups(), loadQueueSessions(), loadQueueEntries()]);
+  await Promise.all([loadEvents(), loadSignups(), loadQueueSessions(), loadQueueEntries(), loadVolunteerHistory()]);
   if (typeof updateVolunteerQueueOverview === 'function') updateVolunteerQueueOverview();
   renderPublicEvents();
   renderMgmtList();
@@ -2031,14 +2035,13 @@ function renderPublicEvents() {
               Array.isArray(s.selected_locations) &&
               s.selected_locations.includes(loc)
             );
-            const isSharedOption = isMultiBookablePickupLocation(loc);
-            const isBooked = !!booking && !isSharedOption;
+            const isBooked = !!booking;
             const bookedByName = booking && booking.name ? String(booking.name).trim() : '';
             return `
               <label class="pickup-option ${isBooked ? 'booked' : ''}" onclick="event.stopPropagation()">
                 <input type="checkbox" value="${escapeHtml(loc)}" ${isBooked ? 'disabled' : ''} onclick="event.stopPropagation()" onchange="refreshSignupButton()">
                 <span onclick="event.stopPropagation()">
-                  <strong>${escapeHtml(loc)}</strong><br><small>${isSharedOption ? 'Flera volontärer kan välja detta' : (isBooked ? ('Redan bokat' + (bookedByName ? ' · Bokad av: ' + escapeHtml(bookedByName) : '')) : 'Ledigt')}</small>
+                  <strong>${escapeHtml(loc)}</strong><br><small>${isBooked ? ('Redan bokat' + (bookedByName ? ' · Bokad av: ' + escapeHtml(bookedByName) : '')) : 'Ledigt'}</small>
                 </span>
               </label>
             `;
@@ -2067,7 +2070,6 @@ function renderPublicEvents() {
     `;
   }).join('');
 
-  updateVolunteerAgreementVisibility();
   refreshSignupButton();
 }
 
@@ -2078,9 +2080,7 @@ function getBookedPickupLocations(eventId) {
   const booked = new Set();
   signupsCache
     .filter(s => s.event_id === eventId && !s.is_waitlist)
-    .forEach(s => (Array.isArray(s.selected_locations) ? s.selected_locations : []).forEach(loc => {
-      if (!isMultiBookablePickupLocation(loc)) booked.add(loc);
-    }));
+    .forEach(s => (Array.isArray(s.selected_locations) ? s.selected_locations : []).forEach(loc => booked.add(loc)));
   return booked;
 }
 function renderPickupSelector() {
@@ -2098,12 +2098,11 @@ function renderPickupSelector() {
 
   wrap.classList.remove('hidden');
   wrap.innerHTML = '<div class="section-label">Välj var du kan hämta</div>' + allowed.map(loc => {
-    const isSharedOption = isMultiBookablePickupLocation(loc);
-    const isBooked = booked.has(loc) && !isSharedOption;
+    const isBooked = booked.has(loc);
     return `
       <label class="pickup-option ${isBooked ? 'booked' : ''}" onclick="event.stopPropagation()">
         <input type="checkbox" value="${escapeHtml(loc)}" ${isBooked ? 'disabled' : ''} onclick="event.stopPropagation()" onchange="refreshSignupButton()">
-        <span onclick="event.stopPropagation()"><strong>${escapeHtml(loc)}</strong><br><small>${isSharedOption ? 'Flera volontärer kan välja detta' : (isBooked ? 'Redan bokat' : 'Ledigt')}</small></span>
+        <span onclick="event.stopPropagation()"><strong>${escapeHtml(loc)}</strong><br><small>${isBooked ? 'Redan bokat' : 'Ledigt'}</small></span>
       </label>
     `;
   }).join('');
@@ -2116,17 +2115,15 @@ function selectEvent(id) {
 }
 
 function getPickupBookedByOthers(eventId, locations, ownSignupId = null) {
-  return locations
-    .filter(loc => !isMultiBookablePickupLocation(loc))
-    .filter(loc =>
-      signupsCache.some(s =>
-        s.event_id === eventId &&
-        s.id !== ownSignupId &&
-        !s.is_waitlist &&
-        Array.isArray(s.selected_locations) &&
-        s.selected_locations.includes(loc)
-      )
-    );
+  return locations.filter(loc =>
+    signupsCache.some(s =>
+      s.event_id === eventId &&
+      s.id !== ownSignupId &&
+      !s.is_waitlist &&
+      Array.isArray(s.selected_locations) &&
+      s.selected_locations.includes(loc)
+    )
+  );
 }
 
 function getSignupByName(eventId, name) {
@@ -2137,37 +2134,10 @@ function getSignupByName(eventId, name) {
   );
 }
 
-
-function resetVolunteerAgreement() {
-  const cb = document.getElementById('volunteerAgreementCheckbox');
-  if (cb) cb.checked = false;
-}
-
-function updateVolunteerAgreementVisibility() {
-  const wrap = document.getElementById('volunteerAgreementWrap');
-  const cb = document.getElementById('volunteerAgreementCheckbox');
-  const ev = eventsCache.find(e => e.id === selectedEventId);
-  if (!wrap || !cb) return;
-
-  if (ev) {
-    wrap.classList.remove('hidden');
-  } else {
-    wrap.classList.add('hidden');
-    cb.checked = false;
-  }
-}
-
-function isVolunteerAgreementChecked() {
-  return document.getElementById('volunteerAgreementCheckbox')?.checked === true;
-}
-
 function refreshSignupButton() {
   const btn = document.getElementById('signupBtn');
   const name = document.getElementById('nameInput').value.trim();
   const ev = eventsCache.find(e => e.id === selectedEventId);
-  const agreementChecked = isVolunteerAgreementChecked();
-
-  updateVolunteerAgreementVisibility();
 
   if (!ev) {
     btn.disabled = true;
@@ -2175,25 +2145,13 @@ function refreshSignupButton() {
     return;
   }
 
-  if (!name) {
-    btn.disabled = true;
-    btn.textContent = 'Fyll i namn först';
-    return;
-  }
-
-  if (!agreementChecked) {
-    btn.disabled = true;
-    btn.textContent = 'Godkänn villkoren först';
-    return;
-  }
-
   if (isPickupEvent(ev)) {
     const selectedPickup = Array.from(document.querySelectorAll('.event-card.selected .pickup-option input:checked')).length;
-    btn.disabled = !(name && selectedPickup > 0 && agreementChecked);
-    btn.textContent = selectedPickup === 0 ? 'Välj hämtställe först' : 'Jag vill hjälpa till';
+    btn.disabled = !(name && selectedPickup > 0);
+    btn.textContent = !name ? 'Fyll i namn först' : selectedPickup === 0 ? 'Välj hämtställe först' : 'Jag vill hjälpa till';
   } else {
-    btn.disabled = !(selectedEventId && name && agreementChecked);
-    btn.textContent = 'Jag vill hjälpa till';
+    btn.disabled = !(selectedEventId && name);
+    btn.textContent = !name ? 'Fyll i namn först' : 'Jag vill hjälpa till';
   }
 }
 function showPublicStatus(text, ok = true) {
@@ -2212,12 +2170,6 @@ async function submitSignup() {
   const ev = eventsCache.find(e => e.id === selectedEventId);
 
   if (!name || !ev) return;
-
-  if (!isVolunteerAgreementChecked()) {
-    showPublicStatus('Du behöver godkänna villkoren innan du anmäler dig.', false);
-    refreshSignupButton();
-    return;
-  }
 
   try {
     hidePublicStatus();
@@ -2244,9 +2196,7 @@ async function submitSignup() {
           return;
         }
 
-        const bookedByOthers = newUniqueLocations
-          .filter(loc => !isMultiBookablePickupLocation(loc))
-          .filter(loc =>
+        const bookedByOthers = newUniqueLocations.filter(loc =>
           signupsCache.some(s =>
             s.event_id === ev.id &&
             s.id !== existingSignup.id &&
@@ -2352,7 +2302,7 @@ async function submitSignup() {
       }
 
       document.getElementById('confirmBadge').textContent = ev.day_name + ' – ' + ev.date;
-      document.getElementById('confirmMsg').textContent = 'Tack! Din anmälan är nu registrerad. Du kommer att få en slutlig bekräftelse på dagen för matutdelningen om du ska delta denna gång.';
+      document.getElementById('confirmMsg').textContent = 'Tack! Din anmälan är nu registrerad.';
       document.getElementById('confirmTitle').textContent = 'Du är anmäld!';
     }
 
@@ -2367,7 +2317,6 @@ function resetForm() {
   document.getElementById('mainForm').classList.remove('hidden');
   document.getElementById('nameInput').value = '';
   selectedEventId = null;
-  resetVolunteerAgreement();
   
   renderPublicEvents();
   hidePublicStatus();
@@ -2516,84 +2465,9 @@ function populateAdminEventSelect() {
     `<option value="${ev.id}">${escapeHtml(ev.day_name)} ${escapeHtml(ev.date)} · ${isPickupEvent(ev) ? 'Hämtning' : 'Matutdelning'}</option>`
   ).join('');
 }
-
-function csvEscape(value) {
-  const text = String(value ?? '');
-  return '"' + text.replace(/"/g, '""') + '"';
-}
-
-function exportSelectedActivitySignups() {
-  ensureAdmin();
-
-  const eventId = document.getElementById('adminEventSelect')?.value;
-  if (!eventId) {
-    alert('Välj en aktivitet först.');
-    return;
-  }
-
-  const ev = eventsCache.find(e => e.id === eventId);
-  if (!ev) {
-    alert('Aktiviteten kunde inte hittas.');
-    return;
-  }
-
-  const rows = signupsCache.filter(s => s.event_id === eventId);
-  if (!rows.length) {
-    alert('Det finns inga anmälningar att exportera för denna aktivitet.');
-    return;
-  }
-
-  const isPickup = isPickupEvent(ev);
-  const header = [
-    'Aktivitet',
-    'Typ',
-    'Datum',
-    'Tid',
-    'Plats',
-    'Volontär',
-    'Status',
-    'Hämtställen',
-    'Anmäld'
-  ];
-
-  const csvRows = [header];
-
-  rows.forEach(row => {
-    const locations = Array.isArray(row.selected_locations) ? row.selected_locations.join(' | ') : '';
-    csvRows.push([
-      ev.day_name || '',
-      isPickup ? 'Hämtning' : 'Matutdelning',
-      ev.date || '',
-      ev.time || '',
-      ev.location || '',
-      row.name || '',
-      row.is_waitlist ? 'Reserv' : 'Anmäld',
-      locations,
-      row.created_at || ''
-    ]);
-  });
-
-  const csvContent = csvRows
-    .map(r => r.map(csvEscape).join(';'))
-    .join('\n');
-
-  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const safeName = String(ev.day_name || 'aktivitet').replace(/[^\wåäöÅÄÖ-]+/g, '_');
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'volontarer_' + safeName + '_' + String(ev.date || '').replaceAll('-', '') + '.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
 function renderSignupAdminList() {
   const eventId = document.getElementById('adminEventSelect')?.value;
   const el = document.getElementById('adminSignupList');
-  const exportBtn = document.getElementById('exportSignupsBtn');
-  if (exportBtn) exportBtn.disabled = !eventId;
   if (!el) return;
 
   if (!eventId) {
@@ -2739,9 +2613,9 @@ function restoreAdminSession() {
   }
 }
 function switchTab(n) {
-  [0,1,2,3].forEach(i => {
-    document.getElementById('tabBtn' + i).classList.toggle('active', i === n);
-    document.getElementById('tab' + i).classList.toggle('hidden', i !== n);
+  [0,1,2,3,4].forEach(i => {
+    document.getElementById('tabBtn' + i)?.classList.toggle('active', i === n);
+    document.getElementById('tab' + i)?.classList.toggle('hidden', i !== n);
   });
 
   if (n === 2) {
@@ -2752,6 +2626,9 @@ function switchTab(n) {
     populateQueueSelect();
     renderQueueAdminPanel();
     startAdminQueuePolling();
+  } else if (n === 4) {
+    stopAdminQueuePolling();
+    renderVolunteerHistory();
   } else {
     stopAdminQueuePolling();
   }
@@ -2833,6 +2710,69 @@ async function addEvent() {
     btn.disabled = false;
   }
 }
+
+function getActivityTypeLabelFromValue(value) {
+  return value === 'hamtning' ? 'Hämtning' : 'Matutdelning';
+}
+
+async function archiveEventSignupsToHistory(eventId, reason = 'activity_deleted') {
+  const ev = eventsCache.find(e => e.id === eventId);
+  if (!ev) return;
+
+  const rows = signupsCache.filter(s => s.event_id === eventId);
+  if (!rows.length) return;
+
+  const payload = rows.map(s => ({
+    event_id: String(ev.id),
+    event_title: ev.day_name || '',
+    event_date: ev.date || null,
+    event_time: ev.time || null,
+    event_location: ev.location || null,
+    activity_type: ev.activity_type || 'utdelning',
+    volunteer_name: s.name || '',
+    selected_locations: Array.isArray(s.selected_locations) ? s.selected_locations : [],
+    status: s.is_waitlist ? 'Reserv' : 'Bekräftad',
+    action: reason,
+    archived_at: new Date().toISOString()
+  }));
+
+  await api('/rest/v1/volunteer_history', {
+    method: 'POST',
+    headers: getHeaders(true, 'return=minimal'),
+    body: JSON.stringify(payload)
+  });
+}
+
+function renderVolunteerHistory() {
+  const el = document.getElementById('volunteerHistoryList');
+  if (!el) return;
+
+  if (!volunteerHistoryCache.length) {
+    el.innerHTML = '<div class="empty-state">Ingen historik ännu.</div>';
+    return;
+  }
+
+  el.innerHTML = volunteerHistoryCache.map(row => {
+    const locations = Array.isArray(row.selected_locations) && row.selected_locations.length
+      ? row.selected_locations.join(', ')
+      : '';
+    const typeLabel = getActivityTypeLabelFromValue(row.activity_type);
+    const archivedDate = row.archived_at ? new Date(row.archived_at).toLocaleString('sv-SE') : '';
+    return `
+      <div class="history-card">
+        <div class="history-title">${escapeHtml(row.volunteer_name || 'Okänd volontär')}</div>
+        <div class="history-sub">
+          ${escapeHtml(typeLabel)} · ${escapeHtml(row.event_title || '')}<br>
+          ${row.event_date ? escapeHtml(fmtDate(row.event_date)) : ''}${row.event_time ? ' · ' + escapeHtml(row.event_time) : ''}${row.event_location ? ' · ' + escapeHtml(row.event_location) : ''}<br>
+          ${locations ? 'Uppgift/hämtställe: ' + escapeHtml(locations) + '<br>' : ''}
+          Status: ${escapeHtml(row.status || '')}${archivedDate ? '<br>Sparad i historik: ' + escapeHtml(archivedDate) : ''}
+        </div>
+        <span class="history-pill">${row.action === 'activity_deleted' ? 'Aktivitet borttagen' : escapeHtml(row.action || 'Historik')}</span>
+      </div>
+    `;
+  }).join('');
+}
+
 function renderMgmtList() {
   const el = document.getElementById('mgmtList');
   if (!eventsCache.length) {
@@ -2872,7 +2812,15 @@ async function toggleEventActive(id) {
 }
 async function deleteEvent(id) {
   ensureAdmin();
-  if (!confirm('Ta bort denna aktivitet?')) return;
+  if (!confirm('Ta bort denna aktivitet? Historiken över anmälda volontärer sparas.')) return;
+
+  try {
+    await archiveEventSignupsToHistory(id, 'activity_deleted');
+  } catch (err) {
+    alert('Kunde inte spara historik. Aktiviteten tas inte bort. Kontrollera att SQL-tabellen volunteer_history finns. Fel: ' + err.message);
+    return;
+  }
+
   await api('/rest/v1/events?id=eq.' + encodeURIComponent(id), {
     method: 'DELETE',
     headers: getHeaders(true, 'return=minimal')
