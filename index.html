@@ -2076,6 +2076,10 @@ if (typeof applyTranslations==='function'){applyTranslations();}
 
 
 const PICKUP_PARTNER_INFO = {
+
+  "Willys Sten Sturegatan och Heden": { combined:["Willys Sten Sturegatan","Willys Heden"] },
+  "Villis Stensturegatan och Heden": { combined:["Willys Sten Sturegatan","Willys Heden"] },
+  "Villis Sten Sturegatan och Heden": { combined:["Willys Sten Sturegatan","Willys Heden"] },
   "Dahls Sisjön": { phone:"031-303 47 65", address:"Sisjövägen 40, Frölunda", area:"Frölunda", time:"Innan stängning (före 17:00)", comment:"Ej före 16:55" },
   "Dahls Bageri Sisjön": { phone:"031-303 47 65", address:"Sisjövägen 40, Frölunda", area:"Frölunda", time:"Innan stängning (före 17:00)", comment:"Ej före 16:55" },
   "Willys Kaverös": { phone:"031-787 22 50", address:"Soprangatan 2, Frölunda", area:"Frölunda", time:"Innan matutdelning", comment:"" },
@@ -2107,6 +2111,19 @@ function getPickupPartnerInfo(locationName) {
 
 function renderPickupContactCard(locationName, eventLabel) {
   const info = getPickupPartnerInfo(locationName);
+
+  if (info && Array.isArray(info.combined)) {
+    const combinedCards = info.combined.map(partnerName => renderPickupContactCard(partnerName, '')).join('');
+    return `
+      <div class="my-pickup-card">
+        <div class="my-pickup-title">📍 ${escapeHtml(locationName)}</div>
+        ${eventLabel ? `<div class="my-pickup-line"><strong>Aktivitet:</strong> ${escapeHtml(eventLabel)}</div>` : ''}
+        <div class="my-pickup-line"><strong>Hämtning omfattar:</strong> ${info.combined.map(escapeHtml).join(' och ')}</div>
+      </div>
+      ${combinedCards}
+    `;
+  }
+
   const mapsHref = info && info.address ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(info.address) : '';
   const phoneHref = info && info.phone ? 'tel:' + info.phone.replace(/\s+/g, '') : '';
   return `
