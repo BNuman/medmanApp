@@ -649,6 +649,27 @@ body{background:var(--cream)!important;color:var(--brown)!important;}
   text-decoration:none;
 }
 
+
+/* Bekräftelseinfo för matutdelning */
+.confirm-distribution-info{
+  margin:16px 0 4px;
+  text-align:left;
+  border:2px solid var(--line,#e6d8c8);
+  border-radius:18px;
+  background:#fff;
+  padding:14px;
+}
+.confirm-distribution-line{
+  font-size:14px;
+  font-weight:800;
+  color:var(--muted,#76695d);
+  line-height:1.55;
+  margin:5px 0;
+}
+.confirm-distribution-line strong{
+  color:var(--brown,#3a2b1f);
+}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -771,6 +792,7 @@ body{background:var(--cream)!important;color:var(--brown)!important;}
       <div class="confirm-title" id="confirmTitle">Du är anmäld!</div>
       <div class="confirm-msg" id="confirmMsg">Tack! Din anmälan är nu registrerad.</div>
       <div class="confirm-badge" id="confirmBadge"></div>
+      <div id="confirmDistributionInfo"></div>
       <div id="confirmPickupInfo"></div>
       <br><br>
       <button class="reset-btn" type="button" onclick="resetForm()">← Tillbaka</button>
@@ -2391,6 +2413,28 @@ function setConfirmPickupInfo(locations, eventLabel) {
   el.innerHTML = list.length ? list.map(loc => renderPickupContactCard(loc, eventLabel)).join('') : '';
 }
 
+
+function setConfirmDistributionInfo(show) {
+  const el = document.getElementById('confirmDistributionInfo');
+  if (!el) return;
+  if (!show) {
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = `
+    <div class="confirm-distribution-info">
+      <div class="confirm-distribution-line">📍 <strong>Plats</strong><br>Carl Johans Kyrka</div>
+      <div class="confirm-distribution-line">📍 <strong>Adress</strong><br>Carl Johans Kyrkoplan 1, 414 55 Göteborg</div>
+      <div class="confirm-distribution-line">🕒 <strong>Tid</strong><br>17:30</div>
+      <div class="confirm-distribution-line">📞 <strong>Om du får förhinder</strong><br>Använd "Avanmäl / avboka" i appen.</div>
+      <div class="confirm-distribution-line" style="text-align:center;margin-top:12px;font-weight:900;">❤️ Vi ser fram emot att träffa dig!</div>
+      <div style="margin-top:12px;text-align:center;">
+        <a href="https://maps.google.com/?q=Carl+Johans+Kyrkoplan+1,+414+55+Göteborg" target="_blank" class="my-pickup-action">📍 Öppna i Google Maps</a>
+      </div>
+    </div>
+  `;
+}
+
 async function submitSignup() {
   const name = document.getElementById('nameInput').value.trim();
   const ev = eventsCache.find(e => e.id === selectedEventId);
@@ -2462,6 +2506,7 @@ async function submitSignup() {
         await reloadAll();
 
         document.getElementById('confirmBadge').textContent = mergedLocations.join(', ');
+        setConfirmDistributionInfo(false);
         setConfirmPickupInfo(mergedLocations, [ev.day_name, fmtDate(ev.date)].filter(Boolean).join(' · '));
         document.getElementById('confirmMsg').textContent = 'Dina hämtställen har uppdaterats.';
         document.getElementById('confirmTitle').textContent = 'Din bokning är uppdaterad!';
@@ -2495,6 +2540,7 @@ async function submitSignup() {
         }
 
         document.getElementById('confirmBadge').textContent = selectedLocations.join(', ');
+        setConfirmDistributionInfo(false);
         setConfirmPickupInfo(selectedLocations, [ev.day_name, fmtDate(ev.date)].filter(Boolean).join(' · '));
         document.getElementById('confirmMsg').textContent = 'Tack! Du är nu anmäld till hämtningen.';
         document.getElementById('confirmTitle').textContent = 'Du är anmäld!';
@@ -2531,7 +2577,8 @@ async function submitSignup() {
 
       document.getElementById('confirmBadge').textContent = ev.day_name + ' – ' + ev.date;
       setConfirmPickupInfo([], '');
-      document.getElementById('confirmMsg').textContent = 'Tack! Din anmälan är nu registrerad.';
+      setConfirmDistributionInfo(true);
+      document.getElementById('confirmMsg').textContent = 'Tack för att du vill hjälpa till. Din anmälan är registrerad.';
       document.getElementById('confirmTitle').textContent = 'Du är anmäld!';
     }
 
