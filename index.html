@@ -553,6 +553,102 @@
   color:#E53935;
 }
 
+
+/* Medmänniska Sverige hemsidefärger - endast färger/logga */
+:root{
+  --cream:#f5eee4 !important;
+  --cream2:#fbf6ee !important;
+  --brown:#3a2b1f !important;
+  --brown2:#6e4c2f !important;
+  --gold:#b38350 !important;
+  --muted:#76695d !important;
+  --line:#e6d8c8 !important;
+}
+body{background:var(--cream)!important;color:var(--brown)!important;}
+.card,.event-card,.pickup-option,.helper-box,.queue-status-box,.called-number-box,.queue-row,.queue-summary-card{
+ background:#fff !important;
+ border-color:var(--line)!important;
+}
+.submit-btn,.create-btn,.primary-big-btn,.ux-selected-pill{
+ background:var(--gold)!important;
+ color:#fff!important;
+}
+.org-name,.helper-title,.section-label,.vqo-title{
+ color:var(--brown2)!important;
+}
+.version,.event-sub,.queue-note,.helper-mini{
+ color:var(--muted)!important;
+}
+
+
+/* Volontärvillkor - återställd utan att ändra övriga funktioner */
+.volunteer-terms-box{
+  margin:18px 0 20px;
+  padding:18px 16px;
+  border:2px solid #ead7d2;
+  border-radius:22px;
+  background:#fffaf7;
+}
+.volunteer-terms-label{
+  display:flex;
+  gap:14px;
+  align-items:flex-start;
+  color:var(--brown,#3a2b1f);
+  font-size:15px;
+  line-height:1.55;
+  font-weight:900;
+}
+.volunteer-terms-label input{
+  width:22px;
+  height:22px;
+  min-width:22px;
+  margin-top:2px;
+  accent-color:var(--gold,#b38350);
+}
+
+
+/* Mina hämtningar - tillagd utan att ändra övrig design/funktion */
+.my-pickups-section{
+  margin:0 0 18px;
+}
+.my-pickup-card{
+  border:2px solid var(--line,#e6d8c8);
+  border-radius:18px;
+  background:#fff;
+  padding:14px;
+  margin-bottom:10px;
+}
+.my-pickup-title{
+  font-size:16px;
+  font-weight:900;
+  color:var(--brown,#3a2b1f);
+  margin-bottom:8px;
+}
+.my-pickup-line{
+  font-size:13px;
+  font-weight:800;
+  color:var(--muted,#76695d);
+  line-height:1.45;
+  margin-top:4px;
+}
+.my-pickup-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+.my-pickup-action{
+  display:inline-block;
+  padding:8px 10px;
+  border-radius:12px;
+  background:var(--cream2,#fbf6ee);
+  border:2px solid var(--line,#e6d8c8);
+  color:var(--brown2,#6e4c2f);
+  font-size:12px;
+  font-weight:900;
+  text-decoration:none;
+}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -647,7 +743,11 @@
       </div>
       <div class="input-group" id="nameInputContainer">
         <div class="section-label">Ditt namn</div>
-        <input type="text" id="nameInput" placeholder="Skriv ditt fullständiga namn…" maxlength="50" oninput="saveVolunteerName(); refreshSignupButton()">
+        <input type="text" id="nameInput" placeholder="Skriv ditt fullständiga namn…" maxlength="50" oninput="saveVolunteerName(); refreshSignupButton(); renderMyPickups()">
+      </div>
+      <div id="myPickupsSection" class="my-pickups-section hidden">
+        <div class="section-label">Mina hämtningar</div>
+        <div id="myPickupsList"></div>
       </div>
       <div id="activitySection">
       <div class="section-label">Välj aktivitet</div>
@@ -655,6 +755,13 @@
       </div>
       
       <div id="publicStatus" class="status-msg"></div>
+
+      <div id="volunteerTermsBox" class="volunteer-terms-box">
+        <label class="volunteer-terms-label">
+          <input type="checkbox" id="volunteerTermsCheckbox" onchange="refreshSignupButton()">
+          <span>Jag är medveten om att all mat och alla donationer är till för människor i behov. Som volontär ansvarar jag för att donationerna hanteras rättvist, respektfullt och enligt organisationens riktlinjer.</span>
+        </label>
+      </div>
       <div class="sticky-cta" id="joinButtonWrap"><button class="submit-btn" type="button" id="signupBtn" onclick="submitSignup()" disabled>Fyll i namn först</button></div>
     </div>
 
@@ -663,6 +770,7 @@
       <div class="confirm-title" id="confirmTitle">Du är anmäld!</div>
       <div class="confirm-msg" id="confirmMsg">Tack! Din anmälan är nu registrerad.</div>
       <div class="confirm-badge" id="confirmBadge"></div>
+      <div id="confirmPickupInfo"></div>
       <br><br>
       <button class="reset-btn" type="button" onclick="resetForm()">← Tillbaka</button>
     </div>
@@ -1936,6 +2044,7 @@ async function reloadAll() {
   await Promise.all([loadEvents(), loadSignups(), loadQueueSessions(), loadQueueEntries(), loadVolunteerHistory()]);
   if (typeof updateVolunteerQueueOverview === 'function') updateVolunteerQueueOverview();
   renderPublicEvents();
+  renderMyPickups();
   renderMgmtList();
   populateCancelSelect();
   populateAdminEventSelect();
@@ -1963,6 +2072,96 @@ async function reloadAll() {
   if (isQueueMode()) renderQueueView();
 forceQueueHelperTextSafe();
 if (typeof applyTranslations==='function'){applyTranslations();}
+}
+
+
+const PICKUP_PARTNER_INFO = {
+  "Dahls Sisjön": { phone:"031-303 47 65", address:"Sisjövägen 40, Frölunda", area:"Frölunda", time:"Innan stängning (före 17:00)", comment:"Ej före 16:55" },
+  "Dahls Bageri Sisjön": { phone:"031-303 47 65", address:"Sisjövägen 40, Frölunda", area:"Frölunda", time:"Innan stängning (före 17:00)", comment:"Ej före 16:55" },
+  "Willys Kaverös": { phone:"031-787 22 50", address:"Soprangatan 2, Frölunda", area:"Frölunda", time:"Innan matutdelning", comment:"" },
+  "Willys Hemma Kaverös": { phone:"031-787 22 50", address:"Soprangatan 2, Frölunda", area:"Frölunda", time:"Innan matutdelning", comment:"" },
+  "Willys Sten Sturegatan": { phone:"031-20 54 20", address:"Sten Sturegatan 34, Göteborg", area:"Centrum", time:"Innan matutdelning", comment:"" },
+  "Willys Hemma Sten Sturegatan": { phone:"031-20 54 20", address:"Sten Sturegatan 34, Göteborg", area:"Centrum", time:"Innan matutdelning", comment:"" },
+  "Willys Heden": { phone:"031-315 03 40", address:"Vasagatan 45, Göteborg", area:"Centrum", time:"Innan matutdelning", comment:"" },
+  "Willys Påvelund": { phone:"031-790 47 40", address:"Traneredsvägen 39, Frölunda", area:"Frölunda", time:"Innan matutdelning", comment:"" },
+  "Willys Hemma Påvelund": { phone:"031-790 47 40", address:"Traneredsvägen 39, Frölunda", area:"Frölunda", time:"Innan matutdelning", comment:"" },
+  "Willys Tuve": { phone:"031-55 53 30", address:"Tuve Torg 12, Göteborg", area:"Hisingen", time:"Innan matutdelning", comment:"" },
+  "Willys Hemma Tuve": { phone:"031-55 53 30", address:"Tuve Torg 12, Göteborg", area:"Hisingen", time:"Innan matutdelning", comment:"" },
+  "Willys Majorna": { phone:"031-790 48 90", address:"Amiralitetsgatan 6, Göteborg", area:"Majorna", time:"Innan matutdelning", comment:"" },
+  "Willys Hemma Majorna": { phone:"031-790 48 90", address:"Amiralitetsgatan 6, Göteborg", area:"Majorna", time:"Innan matutdelning", comment:"" },
+  "SockerMajas Torslanda": { phone:"073-593 00 60", address:"Postflyget 12, Torslanda", area:"Torslanda", time:"Tors 16:45 / Sön 15:45", comment:"" },
+  "SockerMajas": { phone:"073-593 00 60", address:"Postflyget 12, Torslanda", area:"Torslanda", time:"Tors 16:45 / Sön 15:45", comment:"" },
+  "Restaurang Kalimera Torslanda": { phone:"031-92 22 23", address:"Gamla Flygplatsvägen, Torslanda", area:"Torslanda", time:"Ca 16:45", comment:"" },
+  "Restaurang Kalimera": { phone:"031-92 22 23", address:"Gamla Flygplatsvägen, Torslanda", area:"Torslanda", time:"Ca 16:45", comment:"" },
+  "Lilla Landet Amhult": { phone:"072-379 11 23", address:"Krafftlyget 8, Torslanda", area:"Torslanda", time:"Ring innan", comment:"Resecentrum Amhult" },
+  "Brogyllen Landala": { phone:"070-147 66 55", address:"Amund Grefwegatan 30, Göteborg", area:"Centrum", time:"Innan matutdelning", comment:"" },
+  "Brogylle Landala": { phone:"070-147 66 55", address:"Amund Grefwegatan 30, Göteborg", area:"Centrum", time:"Innan matutdelning", comment:"" },
+  "Willys Hemma Torslanda": { phone:"031-315 01 70", address:"Runsviksgatan 1, Torslanda", area:"Torslanda", time:"Innan matutdelning", comment:"" },
+  "Willys Torslanda": { phone:"031-363 68 30", address:"Postflyget 6, Torslanda", area:"Torslanda", time:"Innan matutdelning", comment:"" },
+  "Hemköp Guldheden": { phone:"031-82 25 06", address:"Doktor Fries Torg 4, Göteborg", area:"Centrum", time:"Innan matutdelning", comment:"" }
+};
+
+function getPickupPartnerInfo(locationName) {
+  return PICKUP_PARTNER_INFO[locationName] || null;
+}
+
+function renderPickupContactCard(locationName, eventLabel) {
+  const info = getPickupPartnerInfo(locationName);
+  const mapsHref = info && info.address ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(info.address) : '';
+  const phoneHref = info && info.phone ? 'tel:' + info.phone.replace(/\s+/g, '') : '';
+  return `
+    <div class="my-pickup-card">
+      <div class="my-pickup-title">📍 ${escapeHtml(locationName)}</div>
+      ${eventLabel ? `<div class="my-pickup-line"><strong>Aktivitet:</strong> ${escapeHtml(eventLabel)}</div>` : ''}
+      ${info && info.address ? `<div class="my-pickup-line"><strong>Adress:</strong> ${escapeHtml(info.address)}</div>` : ''}
+      ${info && info.phone ? `<div class="my-pickup-line"><strong>Telefon:</strong> ${escapeHtml(info.phone)}</div>` : ''}
+      ${info && info.time ? `<div class="my-pickup-line"><strong>Hämtningstid:</strong> ${escapeHtml(info.time)}</div>` : ''}
+      ${info && info.area ? `<div class="my-pickup-line"><strong>Område:</strong> ${escapeHtml(info.area)}</div>` : ''}
+      ${info && info.comment ? `<div class="my-pickup-line"><strong>Kommentar:</strong> ${escapeHtml(info.comment)}</div>` : ''}
+      ${!info ? `<div class="my-pickup-line">Adress och kontaktuppgifter saknas för detta hämtställe.</div>` : ''}
+      <div class="my-pickup-actions">
+        ${mapsHref ? `<a class="my-pickup-action" href="${mapsHref}" target="_blank" rel="noopener">Öppna i Google Maps</a>` : ''}
+        ${phoneHref ? `<a class="my-pickup-action" href="${phoneHref}">Ring butiken</a>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderMyPickups() {
+  const section = document.getElementById('myPickupsSection');
+  const list = document.getElementById('myPickupsList');
+  const nameInput = document.getElementById('nameInput');
+  if (!section || !list || !nameInput) return;
+
+  const cleanName = String(nameInput.value || '').trim().toLowerCase();
+  if (!cleanName) {
+    section.classList.add('hidden');
+    list.innerHTML = '';
+    return;
+  }
+
+  const rows = signupsCache.filter(s =>
+    String(s.name || '').trim().toLowerCase() === cleanName &&
+    Array.isArray(s.selected_locations) &&
+    s.selected_locations.length > 0
+  );
+
+  const cards = [];
+  rows.forEach(s => {
+    const ev = eventsCache.find(e => e.id === s.event_id);
+    if (!ev || ev.active === false || !isPickupEvent(ev)) return;
+    const eventLabel = [ev.day_name, fmtDate(ev.date)].filter(Boolean).join(' · ');
+    s.selected_locations.forEach(loc => cards.push(renderPickupContactCard(loc, eventLabel)));
+  });
+
+  if (!cards.length) {
+    section.classList.add('hidden');
+    list.innerHTML = '';
+    return;
+  }
+
+  section.classList.remove('hidden');
+  list.innerHTML = cards.join('');
 }
 
 function renderPublicEvents() {
@@ -2138,6 +2337,7 @@ function refreshSignupButton() {
   const btn = document.getElementById('signupBtn');
   const name = document.getElementById('nameInput').value.trim();
   const ev = eventsCache.find(e => e.id === selectedEventId);
+  const termsChecked = document.getElementById('volunteerTermsCheckbox')?.checked === true;
 
   if (!ev) {
     btn.disabled = true;
@@ -2147,11 +2347,11 @@ function refreshSignupButton() {
 
   if (isPickupEvent(ev)) {
     const selectedPickup = Array.from(document.querySelectorAll('.event-card.selected .pickup-option input:checked')).length;
-    btn.disabled = !(name && selectedPickup > 0);
-    btn.textContent = !name ? 'Fyll i namn först' : selectedPickup === 0 ? 'Välj hämtställe först' : 'Jag vill hjälpa till';
+    btn.disabled = !(name && selectedPickup > 0 && termsChecked);
+    btn.textContent = !name ? 'Fyll i namn först' : selectedPickup === 0 ? 'Välj hämtställe först' : !termsChecked ? 'Godkänn villkoren först' : 'Jag vill hjälpa till';
   } else {
-    btn.disabled = !(selectedEventId && name);
-    btn.textContent = !name ? 'Fyll i namn först' : 'Jag vill hjälpa till';
+    btn.disabled = !(selectedEventId && name && termsChecked);
+    btn.textContent = !name ? 'Fyll i namn först' : !termsChecked ? 'Godkänn villkoren först' : 'Jag vill hjälpa till';
   }
 }
 function showPublicStatus(text, ok = true) {
@@ -2163,6 +2363,14 @@ function hidePublicStatus() {
   const el = document.getElementById('publicStatus');
   el.textContent = '';
   el.className = 'status-msg';
+}
+
+
+function setConfirmPickupInfo(locations, eventLabel) {
+  const el = document.getElementById('confirmPickupInfo');
+  if (!el) return;
+  const list = Array.isArray(locations) ? locations : [];
+  el.innerHTML = list.length ? list.map(loc => renderPickupContactCard(loc, eventLabel)).join('') : '';
 }
 
 async function submitSignup() {
@@ -2236,6 +2444,7 @@ async function submitSignup() {
         await reloadAll();
 
         document.getElementById('confirmBadge').textContent = mergedLocations.join(', ');
+        setConfirmPickupInfo(mergedLocations, [ev.day_name, fmtDate(ev.date)].filter(Boolean).join(' · '));
         document.getElementById('confirmMsg').textContent = 'Dina hämtställen har uppdaterats.';
         document.getElementById('confirmTitle').textContent = 'Din bokning är uppdaterad!';
       } else {
@@ -2268,6 +2477,7 @@ async function submitSignup() {
         }
 
         document.getElementById('confirmBadge').textContent = selectedLocations.join(', ');
+        setConfirmPickupInfo(selectedLocations, [ev.day_name, fmtDate(ev.date)].filter(Boolean).join(' · '));
         document.getElementById('confirmMsg').textContent = 'Tack! Du är nu anmäld till hämtningen.';
         document.getElementById('confirmTitle').textContent = 'Du är anmäld!';
       }
@@ -2302,6 +2512,7 @@ async function submitSignup() {
       }
 
       document.getElementById('confirmBadge').textContent = ev.day_name + ' – ' + ev.date;
+      setConfirmPickupInfo([], '');
       document.getElementById('confirmMsg').textContent = 'Tack! Din anmälan är nu registrerad.';
       document.getElementById('confirmTitle').textContent = 'Du är anmäld!';
     }
@@ -3348,6 +3559,7 @@ async function init() {
   try {
     await reloadAll();
     restoreVolunteerName();
+    renderMyPickups();
     refreshSignupButton();
     restoreAdminSession();
     applyQueueLanguageStatic();
