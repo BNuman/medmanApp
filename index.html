@@ -694,8 +694,19 @@ body{background:var(--cream)!important;color:var(--brown)!important;}
   margin:5px 0;
 }
 
+
+/* Tydligare markerad vald aktivitet */
+.event-card.selected{
+  border-color:var(--brown,#3a2b1f) !important;
+  border-width:3px !important;
+  box-shadow:0 0 0 3px rgba(58,43,31,.10) !important;
+  background:#fffaf7 !important;
+}
+
 </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+
+</script>
 </head>
 <body>
 <div class="container">
@@ -2412,11 +2423,18 @@ function renderPickupSelector() {
     `;
   }).join('');
 }
+
+function resetVolunteerTermsCheckbox() {
+  const checkbox = document.getElementById('volunteerTermsCheckbox');
+  if (checkbox) checkbox.checked = false;
+}
+
 function selectEvent(id) {
+  resetVolunteerTermsCheckbox();
   selectedEventId = id;
   hidePublicStatus();
   renderPublicEvents();
-  
+  refreshSignupButton();
 }
 
 function getPickupBookedByOthers(eventId, locations, ownSignupId = null) {
@@ -2659,8 +2677,11 @@ function resetForm() {
   document.getElementById('mainForm').classList.remove('hidden');
   document.getElementById('nameInput').value = '';
   selectedEventId = null;
+  const volunteerTermsCheckbox = document.getElementById('volunteerTermsCheckbox');
+  if (volunteerTermsCheckbox) volunteerTermsCheckbox.checked = false;
   
   renderPublicEvents();
+  refreshSignupButton();
   hidePublicStatus();
 }
 
@@ -2668,7 +2689,14 @@ function resetForm() {
 function toggleCancel() {
   showVolunteerView();
   const card = document.getElementById('cancelCard');
-  if (card) card.classList.toggle('hidden');
+  if (card) {
+    card.classList.toggle('hidden');
+    if (!card.classList.contains('hidden')) {
+      setTimeout(function() {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+  }
   populateCancelSelect();
   renderCancelOptions();
 }
