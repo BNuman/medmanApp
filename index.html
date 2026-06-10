@@ -670,6 +670,30 @@ body{background:var(--cream)!important;color:var(--brown)!important;}
   color:var(--brown,#3a2b1f);
 }
 
+
+/* Info när inga aktiviteter är öppna */
+.no-activity-info{
+  margin:16px 0 4px;
+  padding:16px;
+  border:2px solid var(--line,#e6d8c8);
+  border-radius:18px;
+  background:#fff;
+  text-align:left;
+}
+.no-activity-title{
+  font-size:15px;
+  font-weight:900;
+  color:var(--brown,#3a2b1f);
+  margin-bottom:8px;
+}
+.no-activity-text{
+  font-size:14px;
+  font-weight:800;
+  color:var(--muted,#76695d);
+  line-height:1.55;
+  margin:5px 0;
+}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -774,6 +798,17 @@ body{background:var(--cream)!important;color:var(--brown)!important;}
       <div id="activitySection">
       <div class="section-label">Välj aktivitet</div>
       <div id="eventsList"></div>
+      <div id="noActivityInfoBox" class="no-activity-info hidden">
+        <div class="no-activity-title">❤️ Tack för ditt engagemang</div>
+        <div class="no-activity-text">Det finns för närvarande inga öppna aktiviteter för anmälan.</div>
+        <div class="no-activity-text">Nästa matutdelning eller hämtning visas här när anmälan öppnar.</div>
+        <div class="no-activity-text">Tack för att du vill hjälpa till och göra skillnad för människor i behov.</div>
+        <div class="no-activity-title" style="margin-top:16px;">💚 Om Medmänniska Sverige</div>
+        <div class="no-activity-text">• Matutdelningar</div>
+        <div class="no-activity-text">• Hämtning av donationer</div>
+        <div class="no-activity-text">• Uppsökande arbete</div>
+        <div class="no-activity-text">• Praktiskt stöd och gemenskap</div>
+      </div>
       </div>
       
       <div id="publicStatus" class="status-msg"></div>
@@ -2204,6 +2239,24 @@ function renderMyPickups() {
   list.innerHTML = cards.join('');
 }
 
+
+function updateNoActivityState(hasActivities) {
+  const noActivityBox = document.getElementById('noActivityInfoBox');
+  const howToBox = document.getElementById('howToBox');
+  const nameInputContainer = document.getElementById('nameInputContainer');
+  const myPickupsSection = document.getElementById('myPickupsSection');
+  const termsBox = document.getElementById('volunteerTermsBox');
+  const joinButtonWrap = document.getElementById('joinButtonWrap');
+
+  if (noActivityBox) noActivityBox.classList.toggle('hidden', hasActivities);
+  if (howToBox) howToBox.classList.toggle('hidden', !hasActivities);
+  if (nameInputContainer) nameInputContainer.classList.toggle('hidden', !hasActivities);
+  if (termsBox) termsBox.classList.toggle('hidden', !hasActivities);
+  if (joinButtonWrap) joinButtonWrap.classList.toggle('hidden', !hasActivities);
+
+  if (!hasActivities && myPickupsSection) myPickupsSection.classList.add('hidden');
+}
+
 function renderPublicEvents() {
   const el = document.getElementById('eventsList');
   const howToBox = document.getElementById('howToBox');
@@ -2229,17 +2282,30 @@ function renderPublicEvents() {
 
   if (!active.length) {
     selectedEventId = null;
+    const termsBox = document.getElementById('volunteerTermsBox');
+    const noActivityBox = document.getElementById('noActivityInfoBox');
+    const myPickupsSection = document.getElementById('myPickupsSection');
+
     if (howToBox) howToBox.style.display = 'none';
     if (nameInputContainer) nameInputContainer.style.display = 'none';
     if (joinButtonWrap) joinButtonWrap.style.display = 'none';
+    if (termsBox) termsBox.style.display = 'none';
+    if (myPickupsSection) myPickupsSection.classList.add('hidden');
+    if (noActivityBox) noActivityBox.classList.remove('hidden');
+
     if (activitySection) activitySection.style.display = 'block';
-    el.innerHTML = '<div class="empty-state">Ingen aktivitet just nu.</div>';
+    el.innerHTML = '<div class="empty-state">Inga aktiviteter är öppna för anmälan just nu.</div>';
     return;
   }
+
+  const termsBox = document.getElementById('volunteerTermsBox');
+  const noActivityBox = document.getElementById('noActivityInfoBox');
 
   if (howToBox) howToBox.style.display = '';
   if (nameInputContainer) nameInputContainer.style.display = '';
   if (joinButtonWrap) joinButtonWrap.style.display = '';
+  if (termsBox) termsBox.style.display = '';
+  if (noActivityBox) noActivityBox.classList.add('hidden');
   if (activitySection) activitySection.style.display = '';
 
   el.innerHTML = active.map(ev => {
