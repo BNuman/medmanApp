@@ -703,6 +703,63 @@ body{background:var(--cream)!important;color:var(--brown)!important;}
   background:#fffaf7 !important;
 }
 
+
+/* Admin dashboard och bemanningsstatus */
+.admin-dashboard{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin:0 0 14px;
+}
+.admin-dashboard-card{
+  border:2px solid var(--line,#e6d8c8);
+  border-radius:16px;
+  background:#fff;
+  padding:12px;
+  text-align:center;
+}
+.admin-dashboard-label{
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--muted,#76695d);
+  line-height:1.25;
+}
+.admin-dashboard-value{
+  font-size:20px;
+  font-weight:900;
+  color:var(--brown,#3a2b1f);
+  margin-top:6px;
+}
+.staffing-line{
+  margin-top:8px;
+  font-size:13px;
+  font-weight:900;
+  color:var(--brown2,#6e4c2f);
+  line-height:1.4;
+}
+.mini-btn.archive{
+  background:var(--cream2,#fbf6ee)!important;
+  color:var(--brown2,#6e4c2f)!important;
+  border-color:var(--line,#e6d8c8)!important;
+}
+@media (max-width:380px){
+  .admin-dashboard{grid-template-columns:1fr;}
+}
+
+
+/* Fix mobilvy: knappen ska inte täcka volontärvillkoren */
+.sticky-cta{
+  position:static !important;
+  bottom:auto !important;
+  z-index:auto !important;
+  margin-top:18px !important;
+}
+.volunteer-terms-box{
+  margin-bottom:18px !important;
+}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
 
@@ -2268,6 +2325,20 @@ function updateNoActivityState(hasActivities) {
   if (!hasActivities && myPickupsSection) myPickupsSection.classList.add('hidden');
 }
 
+function cleanOptionalDisplayValue(value) {
+  if (value === false || value === null || value === undefined) return '';
+  const text = String(value).trim();
+  if (!text) return '';
+  const lower = text.toLowerCase();
+  if (lower === 'false' || lower === 'null' || lower === 'undefined') return '';
+  return text;
+}
+
+function optionalEventMeta(value) {
+  const clean = cleanOptionalDisplayValue(value);
+  return clean ? ' · ' + escapeHtml(clean) : '';
+}
+
 function renderPublicEvents() {
   const el = document.getElementById('eventsList');
   const howToBox = document.getElementById('howToBox');
@@ -2373,7 +2444,7 @@ function renderPublicEvents() {
           <div style="flex:1;">
             <div class="event-title">${escapeHtml(ev.day_name)}</div>
             <div class="event-sub">${escapeHtml(fmtDate(ev.date))}</div>
-            <div class="event-sub">${isPickupEvent(ev) ? 'Hämtning från partner/donatörer' : 'Matutdelning'}${ev.time ? ' · ' + escapeHtml(ev.time) : ''}${ev.location ? ' · ' + escapeHtml(ev.location) : ''}</div>
+            <div class="event-sub">${isPickupEvent(ev) ? 'Hämtning från partner/donatörer' : 'Matutdelning'}${optionalEventMeta(ev.time)}${optionalEventMeta(ev.location)}</div>
             <div class="status-line ${isFull ? 'full' : ''}">
               ${isFull ? (isPickupEvent(ev) ? '🔴 Fullbokad hämtning' : '🔴 Fullbokad – reservlista gäller') : (isPickupEvent(ev) ? '🟢 ' + infoLine : (volunteerAvailable <= 2 ? '🟡 ' + infoLine : '🟢 ' + infoLine))}
             </div>
@@ -3096,8 +3167,8 @@ async function archiveEventSignupsToHistory(eventId, reason = 'activity_deleted'
     event_id: String(ev.id),
     event_title: ev.day_name || '',
     event_date: ev.date || null,
-    event_time: ev.time || null,
-    event_location: ev.location || null,
+    event_time: cleanOptionalDisplayValue(ev.time) || null,
+    event_location: cleanOptionalDisplayValue(ev.location) || null,
     activity_type: ev.activity_type || 'utdelning',
     volunteer_name: s.name || '',
     selected_locations: Array.isArray(s.selected_locations) ? s.selected_locations : [],
@@ -3133,7 +3204,7 @@ function renderVolunteerHistory() {
         <div class="history-title">${escapeHtml(row.volunteer_name || 'Okänd volontär')}</div>
         <div class="history-sub">
           ${escapeHtml(typeLabel)} · ${escapeHtml(row.event_title || '')}<br>
-          ${row.event_date ? escapeHtml(fmtDate(row.event_date)) : ''}${row.event_time ? ' · ' + escapeHtml(row.event_time) : ''}${row.event_location ? ' · ' + escapeHtml(row.event_location) : ''}<br>
+          ${row.event_date ? escapeHtml(fmtDate(row.event_date)) : ''}${optionalEventMeta(row.event_time)}${optionalEventMeta(row.event_location)}<br>
           ${locations ? 'Uppgift/hämtställe: ' + escapeHtml(locations) + '<br>' : ''}
           Status: ${escapeHtml(row.status || '')}${archivedDate ? '<br>Sparad i historik: ' + escapeHtml(archivedDate) : ''}
         </div>
@@ -3143,26 +3214,103 @@ function renderVolunteerHistory() {
   }).join('');
 }
 
+
+function getActivitySignupCount(activityId) {
+  return signupsCache.filter(s => s.event_id === activityId && !s.is_waitlist).length;
+}
+
+function getPickupBookedCount(activityId) {
+  const locations = new Set();
+  signupsCache
+    .filter(s => s.event_id === activityId && !s.is_waitlist && Array.isArray(s.selected_locations))
+    .forEach(s => s.selected_locations.forEach(loc => locations.add(loc)));
+  return locations.size;
+}
+
+function getActivityStaffingText(ev) {
+  if (isPickupEvent(ev)) {
+    const total = getAllowedPickupLocations(ev).length;
+    const booked = getPickupBookedCount(ev.id);
+    const missing = Math.max(0, total - booked);
+    return `${booked} av ${total} hämtställen bemannade${missing > 0 ? ` · ${missing} saknar volontär` : ''}`;
+  }
+  const count = getActivitySignupCount(ev.id);
+  const max = ev.max_volunteers || 7;
+  return `${count} av ${max} volontärer anmälda`;
+}
+
+function getAdminDashboardHtml() {
+  const active = eventsCache.filter(e => e.active !== false);
+  const totalSignups = signupsCache.filter(s => !s.is_waitlist).length;
+  let missingPickups = 0;
+
+  active.filter(isPickupEvent).forEach(ev => {
+    const total = getAllowedPickupLocations(ev).length;
+    const booked = getPickupBookedCount(ev.id);
+    missingPickups += Math.max(0, total - booked);
+  });
+
+  const activeQueue = queueSessionsCache.some(q => q.status === 'open');
+
+  return `
+    <div class="admin-dashboard">
+      <div class="admin-dashboard-card">
+        <div class="admin-dashboard-label">Aktiva aktiviteter</div>
+        <div class="admin-dashboard-value">${active.length}</div>
+      </div>
+      <div class="admin-dashboard-card">
+        <div class="admin-dashboard-label">Anmälda volontärer</div>
+        <div class="admin-dashboard-value">${totalSignups}</div>
+      </div>
+      <div class="admin-dashboard-card">
+        <div class="admin-dashboard-label">Obemannade hämtställen</div>
+        <div class="admin-dashboard-value">${missingPickups}</div>
+      </div>
+      <div class="admin-dashboard-card">
+        <div class="admin-dashboard-label">Digital kö</div>
+        <div class="admin-dashboard-value">${activeQueue ? 'Aktiv' : 'Inaktiv'}</div>
+      </div>
+    </div>
+  `;
+}
+
+async function archiveEvent(id) {
+  if (!confirm('Arkivera aktiviteten? Den tas bort från aktiva listan men historiken sparas.')) return;
+  try {
+    await archiveEventHistory(id);
+    await api('/rest/v1/events?id=eq.' + encodeURIComponent(id), {
+      method: 'PATCH',
+      headers: getHeaders(true, 'return=minimal'),
+      body: JSON.stringify({ active: false })
+    });
+    await reloadAll();
+  } catch (err) {
+    alert('Kunde inte arkivera aktivitet: ' + err.message);
+  }
+}
+
 function renderMgmtList() {
   const el = document.getElementById('mgmtList');
   if (!eventsCache.length) {
-    el.innerHTML = '<div class="empty-state">Inga aktiviteter skapade än.</div>';
+    el.innerHTML = getAdminDashboardHtml() + '<div class="empty-state">Inga aktiviteter skapade än.</div>';
     return;
   }
-  el.innerHTML = eventsCache.map(ev => {
-    const count = signupsCache.filter(s => s.event_id === ev.id).length;
+  el.innerHTML = getAdminDashboardHtml() + eventsCache.map(ev => {
+    const staffingText = getActivityStaffingText(ev);
     return `
       <div class="mgmt-item">
         <div class="mgmt-top">
           <div style="flex:1;min-width:0;">
             <div style="font-weight:900;">${escapeHtml(ev.day_name)}</div>
             <div style="font-size:12px;color:#6b7280;">${escapeHtml(fmtDate(ev.date))}</div>
-            <div style="font-size:12px;color:#6b7280;margin-top:4px;">${isPickupEvent(ev) ? 'Hämtning från partner/donatörer' : 'Matutdelning'}${ev.time ? ' · ' + escapeHtml(ev.time) : ''}${ev.location ? ' · ' + escapeHtml(ev.location) : ''}</div>${isPickupEvent(ev) ? `<div style="font-size:12px;color:#6b7280;margin-top:4px;">${getAllowedPickupLocations(ev).length} valda hämtställen</div>` : ''}
-            <div style="font-size:12px;color:#6b7280;margin-top:4px;">${count} anmälda</div>
+            <div style="font-size:12px;color:#6b7280;margin-top:4px;">${isPickupEvent(ev) ? 'Hämtning från partner/donatörer' : 'Matutdelning'}${optionalEventMeta(ev.time)}${optionalEventMeta(ev.location)}</div>
+            ${isPickupEvent(ev) ? `<div style="font-size:12px;color:#6b7280;margin-top:4px;">${getAllowedPickupLocations(ev).length} valda hämtställen</div>` : ''}
+            <div class="staffing-line">${escapeHtml(staffingText)}</div>
             ${isPickupEvent(ev) ? '<span class="tag">Hämtning</span>' : '<span class="tag">Matutdelning</span>'}
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
             <button class="mini-btn ${ev.active !== false ? 'active' : ''}" type="button" onclick="toggleEventActive('${ev.id}')">${ev.active !== false ? 'Aktiv' : 'Inaktiv'}</button>
+            <button class="mini-btn archive" type="button" onclick="archiveEvent('${ev.id}')">Arkivera</button>
             <button class="mini-btn delete" type="button" onclick="deleteEvent('${ev.id}')">Ta bort</button>
           </div>
         </div>
