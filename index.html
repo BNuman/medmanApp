@@ -888,6 +888,88 @@ body{background:var(--cream)!important;color:var(--brown)!important;}
   accent-color:var(--gold,#b38350);
 }
 
+
+/* UX polish: tydligare vald aktivitet */
+.event-card.selected{
+  position:relative !important;
+  border-color:var(--gold,#b38350) !important;
+  border-width:4px !important;
+  background:#fffaf3 !important;
+  box-shadow:0 0 0 4px rgba(179,131,80,.14), 0 14px 28px rgba(58,43,31,.08) !important;
+}
+.event-card.selected::after{
+  content:"✓";
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:32px;
+  height:32px;
+  border-radius:999px;
+  background:var(--gold,#b38350);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  font-size:19px;
+}
+.event-card.selected .selected-badge{
+  background:var(--gold,#b38350) !important;
+  color:#fff !important;
+  border-color:var(--gold,#b38350) !important;
+  padding:7px 12px !important;
+}
+.admin-tool-card{
+  border:2px solid var(--line,#e6d8c8);
+  border-radius:18px;
+  background:#fffaf7;
+  padding:14px;
+  margin-bottom:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+.admin-tool-title{
+  font-size:14px;
+  font-weight:900;
+  color:var(--brown,#3a2b1f);
+}
+.admin-tool-sub{
+  margin-top:4px;
+  font-size:12px;
+  font-weight:800;
+  color:var(--muted,#76695d);
+  line-height:1.35;
+}
+
+
+/* UX polish: varmare bekräftelse */
+.confirm-screen{
+  padding-top:6px;
+}
+.confirm-title{
+  color:var(--brand-red,#E53935) !important;
+  line-height:1.2;
+}
+.confirm-msg{
+  font-size:16px !important;
+  color:var(--muted,#76695d) !important;
+  font-weight:800 !important;
+}
+.confirm-badge{
+  font-size:15px !important;
+  border-radius:16px !important;
+  padding:12px 16px !important;
+}
+.confirm-warm-line{
+  text-align:center;
+  margin-top:14px !important;
+  font-weight:900 !important;
+  color:var(--brown,#3a2b1f) !important;
+  font-size:15px !important;
+}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
 
@@ -902,7 +984,7 @@ body{background:var(--cream)!important;color:var(--brown)!important;}
     <div class="org-name">Medmänniska Sverige</div>
     <h1 id="mainPageTitle">Volontär</h1>
 <img src="logo.png" class="logo">
-    <div class="version">Version D15.2.0 – admin checklist</div>
+    <div class="version">Version D15.2.1 – UX polish</div>
   
   <div id="uxTopNav" class="ux-top-nav volunteer-first-nav">
     <button class="ux-selected-pill" id="uxBtnVolunteer" type="button" onclick="showVolunteerView()">Volontär</button>
@@ -1020,8 +1102,8 @@ body{background:var(--cream)!important;color:var(--brown)!important;}
 
     <div class="confirm-screen hidden" id="confirmScreen">
       <span class="confirm-icon">🎉</span>
-      <div class="confirm-title" id="confirmTitle">Du är anmäld!</div>
-      <div class="confirm-msg" id="confirmMsg">Tack! Din anmälan är nu registrerad.</div>
+      <div class="confirm-title" id="confirmTitle">Tack för att du hjälper till!</div>
+      <div class="confirm-msg" id="confirmMsg">Din anmälan är registrerad.</div>
       <div class="confirm-badge" id="confirmBadge"></div>
       <div id="confirmDistributionInfo"></div>
       <div id="confirmPickupInfo"></div>
@@ -1074,7 +1156,6 @@ body{background:var(--cream)!important;color:var(--brown)!important;}
       <div class="admin-tabs">
         <button class="atab active" type="button" id="tabBtn0" onclick="switchTab(0)">➕ Skapa</button>
         <button class="atab" type="button" id="tabBtn1" onclick="switchTab(1)">📅 Hantera</button>
-        <button class="atab" type="button" id="tabBtnChecklist" onclick="switchAdminChecklist()">✅ Checklista</button>
         <button class="atab" type="button" id="tabBtn2" onclick="switchTab(2)">📋 Anmälningar</button>
         <button class="atab" type="button" id="tabBtn3" onclick="switchTab(3)">🎟️ Digital kö</button>
         <button class="atab" type="button" id="tabBtn4" onclick="switchTab(4)">🕘 Historik</button>
@@ -1114,6 +1195,13 @@ body{background:var(--cream)!important;color:var(--brown)!important;}
       </div>
 
       <div id="tab1" class="hidden">
+        <div class="admin-tool-card">
+          <div>
+            <div class="admin-tool-title">✅ Checklista för ansvarig</div>
+            <div class="admin-tool-sub">Öppna checklistan inför, under och efter matutdelningen.</div>
+          </div>
+          <button class="mini-btn active" id="openChecklistToolBtn" type="button" onclick="switchAdminChecklist()">Öppna</button>
+        </div>
         <div id="mgmtList"></div>
       </div>
 
@@ -1525,7 +1613,7 @@ const QUEUE_I18N = {
     queue_label: 'Digital kö',
     language_label: 'Välj språk',
     page_title: 'Digital kö',
-    page_version: 'Version D15.2.0 – admin checklist<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer',
+    page_version: 'Version D15.2.1 – UX polish<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer',
     name_label: 'Ditt namn (valfritt)',
     name_placeholder: 'Skriv ditt namn om du vill',
     join: 'Gå med i kön',
@@ -1565,7 +1653,7 @@ const QUEUE_I18N = {
     queue_label: 'Digital queue',
     language_label: 'Choose language',
     page_title: 'Digital queue',
-    page_version: 'Version D15.2.0 – admin checklist<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number',
+    page_version: 'Version D15.2.1 – UX polish<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number',
     name_label: 'Your name (optional)',
     name_placeholder: 'Enter your name if you want',
     join: 'Join the queue',
@@ -2942,7 +3030,7 @@ function setConfirmDistributionInfo(show) {
       <div class="confirm-distribution-line">📍 <strong>Adress</strong><br>Carl Johans Kyrkoplan 1, 414 55 Göteborg</div>
       <div class="confirm-distribution-line">🕒 <strong>Tid</strong><br>17:30</div>
       <div class="confirm-distribution-line">📞 <strong>Om du får förhinder</strong><br>Använd "Avanmäl / avboka" i appen.</div>
-      <div class="confirm-distribution-line" style="text-align:center;margin-top:12px;font-weight:900;">❤️ Vi ser fram emot att träffa dig!</div>
+      <div class="confirm-distribution-line confirm-warm-line">❤️ Vi ses på matutdelningen. Du gör skillnad.</div>
       <div style="margin-top:12px;text-align:center;">
         <a href="https://maps.google.com/?q=Carl+Johans+Kyrkoplan+1,+414+55+Göteborg" target="_blank" class="my-pickup-action">📍 Öppna i Google Maps</a>
       </div>
@@ -3058,7 +3146,7 @@ async function submitSignup() {
         setConfirmDistributionInfo(false);
         setConfirmPickupInfo(selectedLocations, [ev.day_name, fmtDate(ev.date)].filter(Boolean).join(' · '));
         document.getElementById('confirmMsg').textContent = 'Tack! Du är nu anmäld till hämtningen.';
-        document.getElementById('confirmTitle').textContent = 'Du är anmäld!';
+        document.getElementById('confirmTitle').textContent = 'Tack för att du hjälper till!';
       }
     } else {
       if (existingSignup) {
@@ -3093,8 +3181,8 @@ async function submitSignup() {
       document.getElementById('confirmBadge').textContent = ev.day_name + ' – ' + ev.date;
       setConfirmPickupInfo([], '');
       setConfirmDistributionInfo(true);
-      document.getElementById('confirmMsg').textContent = 'Tack för att du vill hjälpa till. Din anmälan är registrerad.';
-      document.getElementById('confirmTitle').textContent = 'Du är anmäld!';
+      document.getElementById('confirmMsg').textContent = 'Du är nu anmäld. Varje insats räknas.';
+      document.getElementById('confirmTitle').textContent = 'Tack för att du hjälper till!';
     }
 
     document.getElementById('mainForm').classList.add('hidden');
@@ -3422,9 +3510,9 @@ function switchAdminChecklist() {
     if (btn) btn.classList.remove('active');
   }
   const checklistTab = document.getElementById('tabChecklist');
-  const checklistBtn = document.getElementById('tabBtnChecklist');
+  const hanteraBtn = document.getElementById('tabBtn1');
   if (checklistTab) checklistTab.classList.remove('hidden');
-  if (checklistBtn) checklistBtn.classList.add('active');
+  if (hanteraBtn) hanteraBtn.classList.add('active');
 }
 
 function resetChecklist() {
