@@ -1027,6 +1027,26 @@ body.modal-open{
   margin-top:8px;
 }
 
+
+/* Fix för checklist-popup som öppnas men inte syns */
+.checklist-modal-overlay:not(.hidden){
+  display:flex !important;
+}
+.checklist-modal-overlay{
+  align-items:flex-start !important;
+  justify-content:center !important;
+  padding-top:18px !important;
+}
+.checklist-modal{
+  display:block !important;
+  position:relative !important;
+  z-index:10000 !important;
+  margin-top:0 !important;
+}
+.checklist-modal.hidden{
+  display:none !important;
+}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
 
@@ -1041,7 +1061,7 @@ body.modal-open{
     <div class="org-name">Medmänniska Sverige</div>
     <h1 id="mainPageTitle">Volontär</h1>
 <img src="logo.png" class="logo">
-    <div class="version">Version D15.2.2 – checklist modal</div>
+    <div class="version">Version D15.2.3 – checklist modal fix</div>
   
   <div id="uxTopNav" class="ux-top-nav volunteer-first-nav">
     <button class="ux-selected-pill" id="uxBtnVolunteer" type="button" onclick="showVolunteerView()">Volontär</button>
@@ -1680,7 +1700,7 @@ const QUEUE_I18N = {
     queue_label: 'Digital kö',
     language_label: 'Välj språk',
     page_title: 'Digital kö',
-    page_version: 'Version D15.2.2 – checklist modal<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer',
+    page_version: 'Version D15.2.3 – checklist modal fix<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer',
     name_label: 'Ditt namn (valfritt)',
     name_placeholder: 'Skriv ditt namn om du vill',
     join: 'Gå med i kön',
@@ -1720,7 +1740,7 @@ const QUEUE_I18N = {
     queue_label: 'Digital queue',
     language_label: 'Choose language',
     page_title: 'Digital queue',
-    page_version: 'Version D15.2.2 – checklist modal<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number',
+    page_version: 'Version D15.2.3 – checklist modal fix<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number',
     name_label: 'Your name (optional)',
     name_placeholder: 'Enter your name if you want',
     join: 'Join the queue',
@@ -3571,14 +3591,28 @@ function restoreAdminSession() {
 
 function openChecklistModal() {
   const overlay = document.getElementById('checklistModalOverlay');
-  if (overlay) overlay.classList.remove('hidden');
+  const checklist = document.getElementById('tabChecklist');
+
+  if (overlay) {
+    overlay.classList.remove('hidden');
+    overlay.scrollTop = 0;
+  }
+  if (checklist) {
+    checklist.classList.remove('hidden');
+  }
+
   document.body.classList.add('modal-open');
 }
 
 function closeChecklistModal(event) {
   if (event && event.target && event.currentTarget && event.target !== event.currentTarget) return;
+
   const overlay = document.getElementById('checklistModalOverlay');
+  const checklist = document.getElementById('tabChecklist');
+
   if (overlay) overlay.classList.add('hidden');
+  if (checklist) checklist.classList.add('hidden');
+
   document.body.classList.remove('modal-open');
 }
 
