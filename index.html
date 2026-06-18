@@ -855,6 +855,39 @@ body{background:var(--cream)!important;color:var(--brown)!important;}
 }
 .volunteer-terms-box{margin-bottom:18px !important;}
 
+
+/* Admin checklista */
+.checklist-box{
+  border:2px solid var(--line,#e6d8c8);
+  border-radius:18px;
+  background:#fff;
+  padding:14px;
+  margin-bottom:12px;
+}
+.checklist-title{
+  font-size:14px;
+  font-weight:900;
+  color:var(--brown,#3a2b1f);
+  margin-bottom:10px;
+}
+.checklist-box label{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  font-size:13px;
+  font-weight:800;
+  color:var(--muted,#76695d);
+  line-height:1.45;
+  margin:9px 0;
+}
+.checklist-box input[type="checkbox"]{
+  width:18px;
+  height:18px;
+  min-width:18px;
+  margin-top:1px;
+  accent-color:var(--gold,#b38350);
+}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
 
@@ -869,7 +902,7 @@ body{background:var(--cream)!important;color:var(--brown)!important;}
     <div class="org-name">Medmänniska Sverige</div>
     <h1 id="mainPageTitle">Volontär</h1>
 <img src="logo.png" class="logo">
-    <div class="version">Version D15.1.0 – admin history</div>
+    <div class="version">Version D15.2.0 – admin checklist</div>
   
   <div id="uxTopNav" class="ux-top-nav volunteer-first-nav">
     <button class="ux-selected-pill" id="uxBtnVolunteer" type="button" onclick="showVolunteerView()">Volontär</button>
@@ -1041,6 +1074,7 @@ body{background:var(--cream)!important;color:var(--brown)!important;}
       <div class="admin-tabs">
         <button class="atab active" type="button" id="tabBtn0" onclick="switchTab(0)">➕ Skapa</button>
         <button class="atab" type="button" id="tabBtn1" onclick="switchTab(1)">📅 Hantera</button>
+        <button class="atab" type="button" id="tabBtnChecklist" onclick="switchAdminChecklist()">✅ Checklista</button>
         <button class="atab" type="button" id="tabBtn2" onclick="switchTab(2)">📋 Anmälningar</button>
         <button class="atab" type="button" id="tabBtn3" onclick="switchTab(3)">🎟️ Digital kö</button>
         <button class="atab" type="button" id="tabBtn4" onclick="switchTab(4)">🕘 Historik</button>
@@ -1082,6 +1116,85 @@ body{background:var(--cream)!important;color:var(--brown)!important;}
       <div id="tab1" class="hidden">
         <div id="mgmtList"></div>
       </div>
+
+
+      <div id="tabChecklist" class="hidden">
+        <div class="section-label">Checklista för ansvarig vid matutdelning</div>
+
+        <div class="checklist-box">
+          <div class="checklist-title">1. Innan lokalen öppnas</div>
+          <label><input type="checkbox"> Kontrollera vem som är ansvarig på plats.</label>
+          <label><input type="checkbox"> Kontrollera vilka volontärer som är anmälda till matutdelningen.</label>
+          <label><input type="checkbox"> Kontrollera vilka volontärer som hämtar från vilka hämtningsställen.</label>
+          <label><input type="checkbox"> Säkerställ att alla planerade hämtningar är bemannade.</label>
+          <label><input type="checkbox"> Kontrollera om någon hämtning saknar volontär och lös det innan utdelningen startar.</label>
+        </div>
+
+        <div class="checklist-box">
+          <div class="checklist-title">2. När lokalen öppnas</div>
+          <label><input type="checkbox"> Lås upp lokalen.</label>
+          <label><input type="checkbox"> Kontrollera larm och att lokalen är trygg att använda.</label>
+          <label><input type="checkbox"> Gör en snabb kontroll av lokalen innan mat packas upp.</label>
+          <label><input type="checkbox"> Kontrollera toaletter och gemensamma ytor.</label>
+          <label><input type="checkbox"> Fotografera och rapportera om något är skadat eller avviker.</label>
+        </div>
+
+        <div class="checklist-box">
+          <div class="checklist-title">3. Innan maten packas upp</div>
+          <label><input type="checkbox"> Dra för gardinerna vid fönsterrutorna.</label>
+          <label><input type="checkbox"> Kontrollera om något produktlarm har skickats från partner/donator.</label>
+          <label><input type="checkbox"> Läs produktlarmet om ett sådant finns.</label>
+          <label><input type="checkbox"> Ansvarig på plats bedömer om donationen kan delas ut eller ska kasseras.</label>
+        </div>
+
+        <div class="checklist-box">
+          <div class="checklist-title">4. Ta emot och sortera maten</div>
+          <label><input type="checkbox"> Säkerställ att alla hämtningar har kommit in.</label>
+          <label><input type="checkbox"> Bär in maten på ett säkert sätt.</label>
+          <label><input type="checkbox"> Sortera maten tydligt efter kategori.</label>
+          <label><input type="checkbox"> Kasta mat som är dålig, skadad eller osäker.</label>
+          <label><input type="checkbox"> Placera ut maten så att utdelningen kan ske lugnt och rättvist.</label>
+        </div>
+
+        <div class="checklist-box">
+          <div class="checklist-title">5. Före utdelningen startar</div>
+          <label><input type="checkbox"> Gå igenom roller med volontärerna.</label>
+          <label><input type="checkbox"> Säkerställ att volontärerna vet var de ska stå och vad de ska göra.</label>
+          <label><input type="checkbox"> Påminn om att all mat och alla donationer är till människor i behov.</label>
+          <label><input type="checkbox"> Påminn om att volontärer inte tar mat från utdelningen.</label>
+          <label><input type="checkbox"> Säkerställ att digital kö eller ordnat kösystem fungerar.</label>
+        </div>
+
+        <div class="checklist-box">
+          <div class="checklist-title">6. Under matutdelningen</div>
+          <label><input type="checkbox"> Håll utdelningen lugn, rättvis och respektfull.</label>
+          <label><input type="checkbox"> Följ kön och undvik särbehandling.</label>
+          <label><input type="checkbox"> Fyll på bord/stationer vid behov.</label>
+          <label><input type="checkbox"> Hantera frågor och konflikter lugnt.</label>
+          <label><input type="checkbox"> Kontakta ansvarig/styrelse vid incident eller otrygg situation.</label>
+        </div>
+
+        <div class="checklist-box">
+          <div class="checklist-title">7. Efter utdelningen</div>
+          <label><input type="checkbox"> Plocka undan all mat och utrustning.</label>
+          <label><input type="checkbox"> Släng skräp och kassera mat som inte kan sparas.</label>
+          <label><input type="checkbox"> Städa lokalen och kontrollera Kvarnen/lokalen.</label>
+          <label><input type="checkbox"> Kontrollera toaletter och gemensamma ytor igen.</label>
+          <label><input type="checkbox"> Säkerställ att inget lämnas kvar på fel plats.</label>
+          <label><input type="checkbox"> Lås lokalen enligt rutin.</label>
+        </div>
+
+        <div class="checklist-box">
+          <div class="checklist-title">8. Uppföljning</div>
+          <label><input type="checkbox"> Notera vilka volontärer som faktiskt var på plats.</label>
+          <label><input type="checkbox"> Notera om någon hämtning eller aktivitet avvek från planen.</label>
+          <label><input type="checkbox"> Dokumentera incidenter, konflikter, skador eller andra viktiga händelser.</label>
+          <label><input type="checkbox"> Skicka kort sammanfattning till ansvariga/styrelsen vid behov.</label>
+        </div>
+
+        <button class="reset-btn" type="button" onclick="resetChecklist()">Rensa checklistan</button>
+      </div>
+
 
       <div id="tab2" class="hidden">
         <div class="input-group">
@@ -1412,7 +1525,7 @@ const QUEUE_I18N = {
     queue_label: 'Digital kö',
     language_label: 'Välj språk',
     page_title: 'Digital kö',
-    page_version: 'Version D15.1.0 – admin history<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer',
+    page_version: 'Version D15.2.0 – admin checklist<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer',
     name_label: 'Ditt namn (valfritt)',
     name_placeholder: 'Skriv ditt namn om du vill',
     join: 'Gå med i kön',
@@ -1452,7 +1565,7 @@ const QUEUE_I18N = {
     queue_label: 'Digital queue',
     language_label: 'Choose language',
     page_title: 'Digital queue',
-    page_version: 'Version D15.1.0 – admin history<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number',
+    page_version: 'Version D15.2.0 – admin checklist<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number',
     name_label: 'Your name (optional)',
     name_placeholder: 'Enter your name if you want',
     join: 'Join the queue',
@@ -2508,7 +2621,8 @@ function getActivityStatusBadge(ev) {
 
 function getAdminDashboardHtml() {
   const active = eventsCache.filter(e => e.active !== false && e.active !== 'false');
-  const totalSignups = signupsCache.filter(s => !s.is_waitlist).length;
+  const activeIds = new Set(active.map(e => e.id));
+  const totalSignups = signupsCache.filter(s => !s.is_waitlist && activeIds.has(s.event_id)).length;
   let missingPickups = 0;
 
   active.filter(isPickupEvent).forEach(ev => {
@@ -2526,7 +2640,7 @@ function getAdminDashboardHtml() {
         <div class="admin-dashboard-value">${active.length}</div>
       </div>
       <div class="admin-dashboard-card">
-        <div class="admin-dashboard-label">Volontärer</div>
+        <div class="admin-dashboard-label">Anmälda</div>
         <div class="admin-dashboard-value">${totalSignups}</div>
       </div>
       <div class="admin-dashboard-card">
@@ -3299,7 +3413,29 @@ function restoreAdminSession() {
     clearAdminSession();
   }
 }
+
+function switchAdminChecklist() {
+  for (let i = 0; i <= 4; i++) {
+    const tab = document.getElementById('tab' + i);
+    const btn = document.getElementById('tabBtn' + i);
+    if (tab) tab.classList.add('hidden');
+    if (btn) btn.classList.remove('active');
+  }
+  const checklistTab = document.getElementById('tabChecklist');
+  const checklistBtn = document.getElementById('tabBtnChecklist');
+  if (checklistTab) checklistTab.classList.remove('hidden');
+  if (checklistBtn) checklistBtn.classList.add('active');
+}
+
+function resetChecklist() {
+  document.querySelectorAll('#tabChecklist input[type="checkbox"]').forEach(cb => cb.checked = false);
+}
+
 function switchTab(n) {
+  const checklistTab = document.getElementById('tabChecklist');
+  const checklistBtn = document.getElementById('tabBtnChecklist');
+  if (checklistTab) checklistTab.classList.add('hidden');
+  if (checklistBtn) checklistBtn.classList.remove('active');
   [0,1,2,3,4].forEach(i => {
     document.getElementById('tabBtn' + i)?.classList.toggle('active', i === n);
     document.getElementById('tab' + i)?.classList.toggle('hidden', i !== n);
