@@ -1061,7 +1061,7 @@ body.modal-open{
     <div class="org-name">Medmänniska Sverige</div>
     <h1 id="mainPageTitle">Volontär</h1>
 <img src="logo.png" class="logo">
-    <div class="version">Version D15.2.3 – checklist modal fix</div>
+    <div class="version">Version D15.2.4 – active signups only</div>
   
   <div id="uxTopNav" class="ux-top-nav volunteer-first-nav">
     <button class="ux-selected-pill" id="uxBtnVolunteer" type="button" onclick="showVolunteerView()">Volontär</button>
@@ -1700,7 +1700,7 @@ const QUEUE_I18N = {
     queue_label: 'Digital kö',
     language_label: 'Välj språk',
     page_title: 'Digital kö',
-    page_version: 'Version D15.2.3 – checklist modal fix<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer',
+    page_version: 'Version D15.2.4 – active signups only<br>2. Tryck på <strong>Gå med i kön</strong><br>3. Vänta tills du får ett nummer',
     name_label: 'Ditt namn (valfritt)',
     name_placeholder: 'Skriv ditt namn om du vill',
     join: 'Gå med i kön',
@@ -1740,7 +1740,7 @@ const QUEUE_I18N = {
     queue_label: 'Digital queue',
     language_label: 'Choose language',
     page_title: 'Digital queue',
-    page_version: 'Version D15.2.3 – checklist modal fix<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number',
+    page_version: 'Version D15.2.4 – active signups only<br>2. Press <strong>Join the queue</strong><br>3. Wait until you receive a number',
     name_label: 'Your name (optional)',
     name_placeholder: 'Enter your name if you want',
     join: 'Join the queue',
@@ -3307,10 +3307,16 @@ function toggleCancel() {
   renderCancelOptions();
 }
 function populateCancelSelect() {
-  const sel = document.getElementById('cancelEventSelect');
-  const active = eventsCache.filter(e => e.active !== false);
-  sel.innerHTML = '<option value="">— Välj aktivitet —</option>' + active.map(ev =>
-    `<option value="${ev.id}">${escapeHtml(ev.day_name)} ${escapeHtml(ev.date)} · ${isPickupEvent(ev) ? 'Hämtning' : 'Matutdelning'}</option>`
+  const select = document.getElementById('cancelEventSelect');
+  if (!select) return;
+
+  const activeEvents = eventsCache
+    .filter(ev => ev.active !== false && ev.active !== 'false')
+    .slice()
+    .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+
+  select.innerHTML = '<option value="">— Välj aktivitet —</option>' + activeEvents.map(ev =>
+    `<option value="${ev.id}">${escapeHtml(ev.day_name || (isPickupEvent(ev) ? 'Hämtning' : 'Matutdelning'))} – ${escapeHtml(fmtDate(ev.date))}</option>`
   ).join('');
 }
 function renderCancelOptions() {
@@ -3435,53 +3441,67 @@ async function doCancel() {
 
 
 function populateAdminEventSelect() {
-  const sel = document.getElementById('adminEventSelect');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">— Välj aktivitet —</option>' + eventsCache.map(ev =>
-    `<option value="${ev.id}">${escapeHtml(ev.day_name)} ${escapeHtml(ev.date)} · ${isPickupEvent(ev) ? 'Hämtning' : 'Matutdelning'}</option>`
+  const select = document.getElementById('adminEventSelect');
+  if (!select) return;
+
+  const activeEvents = eventsCache
+    .filter(ev => ev.active !== false && ev.active !== 'false')
+    .slice()
+    .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+
+  select.innerHTML = '<option value="">— Välj aktivitet —</option>' + activeEvents.map(ev =>
+    `<option value="${ev.id}">${escapeHtml(ev.day_name || (isPickupEvent(ev) ? 'Hämtning' : 'Matutdelning'))} – ${escapeHtml(fmtDate(ev.date))}</option>`
   ).join('');
+
+  const selected = select.value;
+  if (selected && !activeEvents.some(ev => ev.id === selected)) {
+    select.value = '';
+  }
 }
 function renderSignupAdminList() {
-  const eventId = document.getElementById('adminEventSelect')?.value;
+  const select = document.getElementById('adminEventSelect');
   const el = document.getElementById('adminSignupList');
-  if (!el) return;
+  if (!select || !el) return;
 
+  const eventId = select.value;
   if (!eventId) {
     el.innerHTML = '<div class="empty-state">Ingen aktivitet vald.</div>';
     return;
   }
 
-  const ev = eventsCache.find(e => e.id === eventId);
-  const rows = signupsCache.filter(s => s.event_id === eventId);
-
-  if (!rows.length) {
-    el.innerHTML = '<div class="empty-state">Inga anmälningar till denna aktivitet.</div>';
+  const ev = eventsCache.find(e => e.id === eventId && e.active !== false && e.active !== 'false');
+  if (!ev) {
+    el.innerHTML = '<div class="empty-state">Aktiviteten är inte längre aktiv.</div>';
     return;
   }
 
-  el.innerHTML = rows.map(row => {
-    const locations = Array.isArray(row.selected_locations) ? row.selected_locations : [];
-    const locationsHtml = isPickupEvent(ev)
-      ? (locations.length
-          ? locations.map(loc => `
-            <div class="pickup-item-row">
-              <div style="font-size:12px;font-weight:800;">${escapeHtml(loc)}</div>
-              <button class="small-btn delete" type="button" onclick="adminRemovePickupLocation('${row.id}', '${encodeURIComponent(loc)}')">Ta bort</button>
-            </div>
-          `).join('')
-          : '<div class="signup-admin-sub">Inga hämtställen valda.</div>')
+  const rows = signupsCache.filter(s => s.event_id === eventId && !s.is_waitlist);
+
+  if (!rows.length) {
+    el.innerHTML = '<div class="empty-state">Inga anmälningar ännu.</div>';
+    return;
+  }
+
+  el.innerHTML = rows.map(s => {
+    const pickupRows = Array.isArray(s.selected_locations) && s.selected_locations.length
+      ? s.selected_locations.map(loc => `
+          <div class="pickup-item-row">
+            <div>${escapeHtml(loc)}</div>
+            <button class="small-btn delete" type="button" onclick="removeSignupPickup('${s.id}', '${escapeHtml(loc)}')">Ta bort</button>
+          </div>
+        `).join('')
       : '';
 
     return `
       <div class="signup-admin-card">
         <div class="signup-admin-header">
-          <div style="flex:1;min-width:0;">
-            <div class="signup-admin-name">${escapeHtml(row.name)}</div>
-            <div class="signup-admin-sub">${row.is_waitlist ? 'Reserv' : 'Bekräftad'}${isPickupEvent(ev) ? ' · Hämtning' : ' · Matutdelning'}</div>
+          <div>
+            <div class="signup-admin-name">${escapeHtml(s.name || '')}</div>
+            <div class="signup-admin-sub">${escapeHtml(fmtDate(ev.date))} · ${isPickupEvent(ev) ? 'Hämtning' : 'Matutdelning'}</div>
           </div>
-          <button class="small-btn delete" type="button" onclick="adminRemoveSignup('${row.id}')">Ta bort person</button>
+          <button class="small-btn delete" type="button" onclick="deleteSignup('${s.id}')">Ta bort</button>
         </div>
-        ${isPickupEvent(ev) ? `<div style="margin-top:10px;" onclick="event.stopPropagation()"><div class="section-label">Valda hämtställen</div>${locationsHtml}</div>` : ''}
+        ${pickupRows}
       </div>
     `;
   }).join('');
